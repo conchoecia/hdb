@@ -1,15 +1,17 @@
 CC = g++
-CPPFLAGS = --std=c++11 -Wall -I../
+CPPFLAGS = --std=c++11 -Wall -I../src/
 TESTFLAGS = --std=c++11 -fprofile-arcs -ftest-coverage
-TESTSUFF  = -L /usr/lib -I/usr/include -I../
+TESTSUFF  = -L /usr/lib -I/usr/include -I../src
 
 all: gcov run
 
-run: a.out
+run: main
 	./main
 	gcov test_DBG.cpp
 	lcov --c --directory . --output-file main_coverage.info
-	genhtml main_coverage.info --output-directory out
+	lcov --remove main_coverage.info "*/test/*" "/usr/include/*" "/usr/local/*" -o filtered_coverage.info
+	rm main_coverage.info
+	genhtml filtered_coverage.info --output-directory out
 
 test: test_DBG.cpp
 	$(CC) $(CPPFLAGS) test_DBG.cpp
@@ -23,3 +25,7 @@ clean:
 	rm -f *.gcov
 	rm -f *.gcno
 	rm -f test_case_HKCs
+	rm -rf out
+	rm -f main_coverage.info
+	rm -f *.gcda
+	rm -f test_dump.tsv
