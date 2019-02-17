@@ -1,3 +1,4 @@
+![travis_ci](https://travis-ci.org/conchoecia/hdb.svg?branch=master)
 [![codecov](https://codecov.io/gh/conchoecia/hdb/branch/master/graph/badge.svg)](https://codecov.io/gh/conchoecia/hdb)
 
 # hdb
