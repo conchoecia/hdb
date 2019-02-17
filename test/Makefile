@@ -29,3 +29,6 @@ clean:
 	rm -f main_coverage.info
 	rm -f *.gcda
 	rm -f test_dump.tsv
+
+cleanf:
+	rm *coverage.info
