@@ -1,0 +1,10 @@
+language: cpp
+# Compiler selection
+compiler:
+  - clang
+  - gcc
+# Build steps
+script:
+  - mkdir build
+  - cd build
+  - make -C ../test test
