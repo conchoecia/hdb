@@ -9,6 +9,7 @@ script:
   - cd build
   - make -C ../test test
 
+#instructions here: https://genbattle.bitbucket.io/blog/2016/01/17/c++-travis-ci/
 matrix:
   include:
     - compiler: gcc
