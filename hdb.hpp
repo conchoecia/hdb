@@ -76,36 +76,6 @@ unsigned char seq_nt4_table[128] = { // Table to change "ACGTN" to 01234
 // converts 0123 to ACGT
 std::vector<std::string> int_base_to_str = { "A", "C", "G", "T"};
 
-template<class Stream, class T>
-int parse_kmer_dump(DBG & G, Stream & stream, T k){
-  std::string line;
-  int skip = 0;
-  uint64_t counter = 0;
-  DBnode * pNode;
-  uint64_t index;
-  uint16_t this_count;
-  while(std::getline(stream, line)){
-    std::stringstream ss(line);
-    while(std::getline(ss, line, '\t') && !skip && counter < 2){
-      if (counter == 0){
-        index = kmer_to_uint64(line, k);
-      } else {
-        uint32_t temp = std::stoul(line);
-        if (temp < std::numeric_limits<uint16_t>::max()){
-          this_count = static_cast<uint16_t>(temp);
-        }
-        else{
-          this_count = std::numeric_limits<uint16_t>::max();
-        }
-      }
-      counter++;
-    }
-    pNode = G.access_node(index, 1);
-    pNode->count = this_count;
-    counter = 0;
-  }
-  return 0;
-}
 
 /** This function takes a sequence as a char array,
         and adds all the kmers into the hash table, and counts **/
@@ -771,6 +741,37 @@ std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
     }
   }
   return "N";
+}
+
+template<class Stream, class T>
+int parse_kmer_dump(DBG & G, Stream & stream, T k){
+  std::string line;
+  int skip = 0;
+  uint64_t counter = 0;
+  DBnode * pNode;
+  uint64_t index;
+  uint16_t this_count;
+  while(std::getline(stream, line)){
+    std::stringstream ss(line);
+    while(std::getline(ss, line, '\t') && !skip && counter < 2){
+      if (counter == 0){
+        index = kmer_to_uint64(line, k);
+      } else {
+        uint32_t temp = std::stoul(line);
+        if (temp < std::numeric_limits<uint16_t>::max()){
+          this_count = static_cast<uint16_t>(temp);
+        }
+        else{
+          this_count = std::numeric_limits<uint16_t>::max();
+        }
+      }
+      counter++;
+    }
+    pNode = G.access_node(index, 1);
+    pNode->count = this_count;
+    counter = 0;
+  }
+  return 0;
 }
 
 #endif
