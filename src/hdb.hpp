@@ -2,12 +2,13 @@
 #define DE_BRUIJN_H
 
 #include <fstream>
+#include <iostream>
+#include "khash.h"
 #include <map>
+#include <sstream>
 #include <stdexcept> //std::runtime_error
 #include <utility>
 #include <vector>
-#include "khash.h"
-#include <iostream>
 
 template<class T>
 uint64_t canon(const uint64_t & kmer, T k);
@@ -412,6 +413,7 @@ int DBG::mark_non_het_for_deletion(){
       pNode = access_node(key, 0);
       if ( pNode->is_flag_on(2) == 0){ //if not yet visited
         fptp = pNode->flag & mask;
+        std::cout << "fptp is: " << fptp << std::endl;
         switch (fptp){
           case 3: // both fp and tp branch
             //std::cout << "both branch\n";
@@ -422,7 +424,7 @@ int DBG::mark_non_het_for_deletion(){
             //std::cout << "search in the rp dir\n";
             _mark_nhfd_helper(key, 1);
             break;
-          case 2: //just tp branch
+          case 2: //just rp branch
             //search in the fp direction
             //std::cout << "search in the fp dir\n";
             _mark_nhfd_helper(key, 0);
@@ -473,11 +475,14 @@ int DBG::_mark_nhfd_helper(uint64_t source,
       ind = i;
     }
   }
-  if (t_counter == 1){ //we found the extension
+  if (t_counter == 0) { //We didn't find any extensions. Just delete this one.
+    return 0; //already marked for delete
+  }
+  else if (t_counter == 1){ //we found the extension
     k = kh_get(64, class_h, dec[ind]); // query the hash table
     ext = kh_key(class_h, k);
   }
-  else{ //we found the termination of the homozygous region
+  else{ //there are multiple options - we should never reach this error
     throw std::runtime_error("Trying to extend in a direction with two or more options.\n");
   }
   // END OF BLOCK TO FIND EXT

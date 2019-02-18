@@ -1517,3 +1517,89 @@ TEST_CASE("test for N in kmer", "[N_kmer_to_uint64]"){
   uint32_t k = 9;
   REQUIRE( kmer_to_uint64(kmer, k) == 0);
 }
+
+TEST_CASE("test if singleton double branches are identified",
+          "[remove_double_branches]"){
+  DBG G = DBG(5);
+  std::string str = "GACAC";
+  DBnode * pNode = G.access_node(str, 1);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+
+  str = "TACAC";
+  pNode = G.access_node(str, 1);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+
+  str =  "ACACC";
+  pNode = G.access_node(str, 1);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+
+  str =   "CACCC";
+  pNode = G.access_node(str, 1);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+
+  str =   "CACCG";
+  pNode = G.access_node(str, 1);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+
+  G.mark_branching();
+  G.mark_non_het_for_deletion();
+
+  str = "GACAC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+
+  str = "TACAC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+
+  str =  "ACACC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 1);
+  REQUIRE(pNode->is_flag_on(1) == 1);
+
+  str =   "CACCC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+
+  str =   "CACCG";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+}
+
+TEST_CASE("test mark_non_het_for_deletion case 2",
+          "[mnhfd_case2]"){
+  uint32_t ksize = 5;
+  DBG G = DBG(ksize);
+  DBnode * pNode;
+  std::string str = "CCCCG";
+  std::string br1 = "CCCGA";
+  std::string br2 = "CCCGT";
+  pNode = G.access_node(str, 1);
+  pNode = G.access_node(br1, 1);
+  pNode = G.access_node(br2, 1);
+  G.print_graph();
+  G.mark_branching();
+  G.mark_non_het_for_deletion();
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 1);
+}
