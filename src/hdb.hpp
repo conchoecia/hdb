@@ -506,12 +506,12 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     }
     //std::cout << "extension pos is: " << pos << std::endl;
     if (pos >= 8){ //we should have found the source
-      std::cout << "   Source: " << source << std::endl;
-      std::cout << "Extension: " << ext << std::endl;
-      std::cout << "   Source: ";
-      print_uint64_t(source);
-      std::cout << "Extension: ";
-      print_uint64_t(ext);
+      //std::cout << "   Source: " << source << std::endl;
+      //std::cout << "Extension: " << ext << std::endl;
+      //std::cout << "   Source: ";
+      //print_uint64_t(source);
+      //std::cout << "Extension: ";
+      //print_uint64_t(ext);
       throw std::runtime_error("We didn't find the source for some reason.\n");
     }
     else if ( pos < 4 ){ //the source was 5' relative to ext. extend 3'
