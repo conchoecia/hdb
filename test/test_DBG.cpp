@@ -1505,6 +1505,7 @@ TEST_CASE("tests the HKC gen number 4", "[test_hkc_gen4]"){
   //G.print_graph();
 }
 
+
 /* Tries to get a different direction for 3' for test_hkc_gen5
    */
 TEST_CASE("tests the HKC gen number 5", "[test_hkc_gen5]"){
@@ -1547,22 +1548,50 @@ TEST_CASE("tests the HKC gen number 5", "[test_hkc_gen5]"){
 
   G.mark_non_het_for_deletion();
 
-  //for (uint32_t i = 1; i < str.size()-ksize; i++){
-  //  std::string str2 = str.substr(i,ksize);
-  //  pNode = G.access_node(str2, 0);
-  //  std::cout << "accessing: " << str2 << std::endl;
-  //  REQUIRE(pNode != nullptr);
-  //  REQUIRE(pNode->is_flag_on(3) == 1);
-  //}
+  for (uint32_t i = 1; i < str.size()-ksize; i++){
+    std::string str2 = str.substr(i,ksize);
+    pNode = G.access_node(str2, 0);
+    //std::cout << "accessing: " << str2 << std::endl;
+    REQUIRE(pNode != nullptr);
+    REQUIRE(pNode->is_flag_on(3) == 1);
+  }
+
+  //These nodes should not be flagged for deletion
+  pNode = G.access_node(br1, 0);
+  REQUIRE(pNode->is_flag_on(3) == 0);
+  pNode = G.access_node(br2, 0);
+  REQUIRE(pNode->is_flag_on(3) == 0);
+  pNode = G.access_node(str.substr(0,ksize), 0);
+  REQUIRE(pNode->is_flag_on(3) == 0);
+  pNode = G.access_node(str.substr(str.size()-ksize, ksize), 0);
+  REQUIRE(pNode->is_flag_on(3) == 0);
+
+  G.delete_flagged();
+
+  // all these nodes should be deleted
+  for (uint32_t i = 1; i < str.size()-ksize; i++){
+    std::string str2 = str.substr(i,ksize);
+    pNode = G.access_node(str2, 0);
+    //std::cout << "accessing: " << str2 << std::endl;
+    REQUIRE(pNode == nullptr);
+  }
+
+  // these nodes should still exist
+  pNode = G.access_node(br1, 0);
+  REQUIRE(pNode != nullptr);
+  pNode = G.access_node(br2, 0);
+  REQUIRE(pNode != nullptr);
+  pNode = G.access_node(str.substr(0,ksize), 0);
+  REQUIRE(pNode != nullptr);
+  pNode = G.access_node(str.substr(str.size()-ksize, ksize), 0);
+  REQUIRE(pNode != nullptr);
 
   //std::cout << "GEN5 BEGINNING" << std::endl;
   //G.print_graph();
   //std::cout << "GEN5 END" << std::endl;
 
-  G.delete_flagged();
-
   REQUIRE(G.count_nulls() == 0);
-  G.print_graph();
+  //G.print_graph();
 }
 
 TEST_CASE("some tests for the get_extensions function", "[get_extensions_str_test]"){

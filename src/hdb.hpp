@@ -413,7 +413,6 @@ int DBG::mark_non_het_for_deletion(){
       pNode = access_node(key, 0);
       if ( pNode->is_flag_on(2) == 0){ //if not yet visited
         fptp = pNode->flag & mask;
-        //std::cout << "fptp is: " << fptp << std::endl;
         switch (fptp){
           case 3: // both fp and tp branch
             //std::cout << "both branch\n";
@@ -491,7 +490,6 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     //print_uint64_t(source);
     //std::cout << "i Extension: ";
     //print_uint64_t(ext);
-    //std::cout << '\n';
     pNode = access_node(ext, 0);
     //first mark the node for deletion. it is no good
     pNode->bit_on(2);
@@ -506,6 +504,7 @@ int DBG::_mark_nhfd_helper(uint64_t source,
         break;
       }
     }
+    //std::cout << "extension pos is: " << pos << std::endl;
     if (pos >= 8){ //we should have found the source
       std::cout << "   Source: " << source << std::endl;
       std::cout << "Extension: " << ext << std::endl;
@@ -522,13 +521,15 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     }
     else{ // the source was 3' relative to ext. extend 5'
       start = 0;
-      stop = 3;
+      stop = 4;
     }
+    //std::cout << "Start: " << start << ". and Stop: " << stop << "." << std::endl;
 
     //now figure out if there are zero, one, or more extensions
     uint32_t counter = 0;
     uint32_t new_ext_index = 8;
     for (uint32_t i = start; i < stop; i++){
+      //std::cout << "  - looking at: " << uint64_to_kmer(vec[i], class_k) << std::endl;
       pNodeT = access_node(vec[i], 0);
       if (pNodeT != nullptr){ //not a null ptr,
         counter++;
@@ -543,6 +544,7 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     else{ //we found the termination of the homozygous region
       done = 1;
     }
+    //std::cout << '\n';
   }
   return 0;
 }
