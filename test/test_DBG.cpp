@@ -1505,6 +1505,66 @@ TEST_CASE("tests the HKC gen number 4", "[test_hkc_gen4]"){
   //G.print_graph();
 }
 
+/* Tries to get a different direction for 3' for test_hkc_gen5
+   */
+TEST_CASE("tests the HKC gen number 5", "[test_hkc_gen5]"){
+  uint32_t ksize = 13;
+  DBG G = DBG(ksize);
+  DBnode * pNode;
+  std::string str = "GTATCTTAACCGTGTTAATTTAGCCCCTAGTCTTTATTGCGGACGTTTGAGAAGTGCCGTTGCCTTCCCCCCTGCGGAGTTGACAACTTACTCGATGACTCAGATTTCTTGA";
+  std::string filename = "test_case_HKCs";
+  for (uint32_t i = 0; i < str.size()-ksize+1; i++){
+    std::string str2 = str.substr(i,ksize);
+    pNode = G.access_node(str2, 1);
+    REQUIRE(pNode != nullptr);
+  }
+
+  std::string br1 = "ATATCTTAACCGT";
+  pNode = G.access_node(br1, 1);
+  std::string br2 = "TCAGATTTCTTGC";
+  pNode = G.access_node(br2, 1);
+
+
+  std::string f1 = str.substr(1,ksize);
+  //canonical CACGGTTAAGATA
+  std::string f2 = str.substr(str.size()-ksize-1,ksize);
+  //canonical CAAGAAATCTGAG
+  pNode = G.access_node(f1, 1);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+  pNode = G.access_node(f2, 1);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+  G.mark_branching();
+  std::cout << "accessing: " << f1 << std::endl;
+  pNode = G.access_node(f1, 1);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 1);
+  std::cout << "accessing: " << f2 << std::endl;
+  pNode = G.access_node(f2, 1);
+  REQUIRE(pNode->is_flag_on(0) == 1);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+
+  G.mark_non_het_for_deletion();
+
+  //for (uint32_t i = 1; i < str.size()-ksize; i++){
+  //  std::string str2 = str.substr(i,ksize);
+  //  pNode = G.access_node(str2, 0);
+  //  std::cout << "accessing: " << str2 << std::endl;
+  //  REQUIRE(pNode != nullptr);
+  //  REQUIRE(pNode->is_flag_on(3) == 1);
+  //}
+
+  //std::cout << "GEN5 BEGINNING" << std::endl;
+  //G.print_graph();
+  //std::cout << "GEN5 END" << std::endl;
+
+  G.delete_flagged();
+
+  REQUIRE(G.count_nulls() == 0);
+  G.print_graph();
+}
+
 TEST_CASE("some tests for the get_extensions function", "[get_extensions_str_test]"){
   std::string kmer = "GGACNATAC";
   uint32_t k = 9;
@@ -1585,6 +1645,8 @@ TEST_CASE("test if singleton double branches are identified",
   REQUIRE(pNode->is_flag_on(1) == 0);
 }
 
+/* in this case str branches but there are no extensions
+   */
 TEST_CASE("test mark_non_het_for_deletion case 2",
           "[mnhfd_case2]"){
   uint32_t ksize = 5;
@@ -1602,4 +1664,14 @@ TEST_CASE("test mark_non_het_for_deletion case 2",
   pNode = G.access_node(str, 0);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 1);
+}
+
+TEST_CASE("make _mark_nhfd_helper fail",
+          "[make_nhfd_helper_fail]"){
+  uint32_t ksize = 5;
+  DBG G = DBG(ksize);
+  std::string str = "CCCCG";
+  G.access_node(str,1);
+  uint64_t source = kmer_to_uint64(str, 5);
+  REQUIRE_THROWS_AS(G._mark_nhfd_helper(source, 3), std::runtime_error);
 }

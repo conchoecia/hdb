@@ -413,7 +413,7 @@ int DBG::mark_non_het_for_deletion(){
       pNode = access_node(key, 0);
       if ( pNode->is_flag_on(2) == 0){ //if not yet visited
         fptp = pNode->flag & mask;
-        std::cout << "fptp is: " << fptp << std::endl;
+        //std::cout << "fptp is: " << fptp << std::endl;
         switch (fptp){
           case 3: // both fp and tp branch
             //std::cout << "both branch\n";
@@ -475,15 +475,12 @@ int DBG::_mark_nhfd_helper(uint64_t source,
       ind = i;
     }
   }
-  if (t_counter == 0) { //We didn't find any extensions. Just delete this one.
-    return 0; //already marked for delete
-  }
-  else if (t_counter == 1){ //we found the extension
+  if (t_counter == 1){ //we found the extension
     k = kh_get(64, class_h, dec[ind]); // query the hash table
     ext = kh_key(class_h, k);
   }
-  else{ //there are multiple options - we should never reach this error
-    throw std::runtime_error("Trying to extend in a direction with two or more options.\n");
+  else{ //there are multiple options or none - we should just delete this
+    return 0;
   }
   // END OF BLOCK TO FIND EXT
 
