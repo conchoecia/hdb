@@ -96,7 +96,9 @@ uint64_t kmer_to_uint64(std::string str, T inp_k){
       if (++l >= k) { // we find a k-mer
         return x[0] < x[1]? x[0] : x[1];
       }
-    } else l = 0, x[0] = x[1] = 0; // if there is an "N", restart
+    } else {
+      break;
+    } // if there is an "N" return 0
   }
   return 0;
 }
