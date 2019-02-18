@@ -1704,3 +1704,12 @@ TEST_CASE("make _mark_nhfd_helper fail",
   uint64_t source = kmer_to_uint64(str, 5);
   REQUIRE_THROWS_AS(G._mark_nhfd_helper(source, 3), std::runtime_error);
 }
+
+TEST_CASE("tests a throw in _gen_HKC_helper_function", "[HKC_function_should_fail]"){
+  uint32_t ksize = 5;
+  DBG G = DBG(ksize);
+  std::string str = "CCCCG";
+  G.access_node(str, 1);
+  uint64_t origin = kmer_to_uint64(str, 5);
+  REQUIRE_THROWS_AS(G._gen_HKC_helper(origin, 1, 2), std::runtime_error);
+}
