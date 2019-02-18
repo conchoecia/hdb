@@ -1501,5 +1501,19 @@ TEST_CASE("tests the HKC gen number 4", "[test_hkc_gen4]"){
     REQUIRE(line == "TTCCATACGCCATTGGAGGAGTAACAAAATCGTTCAGTAACAGAGTGAAATGCGTCATAACAAGGGACCATCTGCCGTCAGCTCTACGTTCCAAGTACATGTTGAGTTACAA");
     std::cout << "line: " << line << std::endl;
   }
+  REQUIRE(G.count_nulls() == 0);
   //G.print_graph();
+}
+
+TEST_CASE("some tests for the get_extensions function", "[get_extensions_str_test]"){
+  std::string kmer = "GGACNATAC";
+  uint32_t k = 9;
+  REQUIRE( get_extensions(kmer, k+1).size() == 0);
+  REQUIRE_THROWS_AS( get_extensions(kmer, k), std::runtime_error);
+}
+
+TEST_CASE("test for N in kmer", "[N_kmer_to_uint64]"){
+  std::string kmer = "GGACNATAC";
+  uint32_t k = 9;
+  REQUIRE( kmer_to_uint64(kmer, k) == 0);
 }
