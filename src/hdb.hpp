@@ -205,7 +205,7 @@ uint64_t canon(const uint64_t & kmer, T k){
 class DBG {
   public:                      // begin public section
     //constructors and setup
-    template<class T> DBG(T init_k);      // constructor
+    template<class T> DBG(T init_k, uint32_t print=0);      // constructor
     ~DBG();
     // standard getters
     template<class T> DBnode* access_node(uint64_t index, T put );
@@ -229,13 +229,16 @@ class DBG {
     int print_graph();
   private:                // begin private section
     uint32_t class_k;                // member variable
+    uint32_t class_print;
     khash_t(64) *class_h; //initialise the hash table of kmers to index
 };
 
 /* constructor of HKCgraph,
     just set k and initialize the empty HKC map*/
 template<class T>
-DBG::DBG(T init_k) {
+DBG::DBG(T init_k, uint32_t print) {
+  std::cout.precision(2);
+  class_print = print;
   class_k = static_cast<uint32_t>(init_k);
   class_h = kh_init(64);
 }
@@ -338,12 +341,23 @@ int DBG::count_nulls(){
 template<typename T>
 int DBG::delete_if_below_val(T min){
   khint_t k;
+  uint64_t class_size = size();
+  uint64_t counter = 0;
   for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
     if (kh_exist(class_h, k)){            // test if a bucket contains data
       if (kh_val(class_h, k).count < min){
         kh_del(64, class_h, k);// remove a key-value pair
       }
+      counter++;
+      if (class_print == 1){
+        if ( counter % 20000 == 0){
+          std::cout << "\r" << "   - " << counter/class_size << "% (" << counter << " of " << class_size << " )  " << std::flush;
+        }
+      }
     }
+  }
+  if (class_print == 1){
+    std::cout << "\r" << "   - " << counter/class_size << "% (" << counter << " of " << class_size << " )  " << std::flush;
   }
   return 0;
 }

@@ -7,7 +7,7 @@
 
 int main(int argc, char **argv) {
   Vars vars = process_cl_args(argc, argv);
-  DBG G = DBG(vars.k);
+  DBG G = DBG(vars.k, 1);
   std::cout << " - Reading kmers from stdin." << std::endl;
   parse_kmer_dump(G, std::cin, vars.k, 1 );
   std::cout << " - Removing all kmers with counts below: " << vars.min_count << std::endl;
