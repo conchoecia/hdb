@@ -357,7 +357,7 @@ int DBG::delete_if_below_val(T min){
     }
   }
   if (class_print == 1){
-    std::cout << "\r" << "   - " << (counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+    std::cout << "\r" << "   - 100% (" << counter << " of " << class_size << " )  " << std::endl;
   }
   return 0;
 }
@@ -366,12 +366,23 @@ int DBG::delete_if_below_val(T min){
 template<typename T>
 int DBG::delete_if_above_val(T max){
   khint_t k;
+  uint64_t class_size = size();
+  uint64_t counter = 0;
   for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
     if (kh_exist(class_h, k)){            // test if a bucket contains data
       if (kh_val(class_h, k).count > max){
         kh_del(64, class_h, k);// remove a key-value pair
       }
+      counter++;
+      if (class_print == 1){
+        if ( counter % 20000 == 0){
+          std::cout << "\r" << "   - " << (counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+        }
+      }
     }
+  }
+  if (class_print == 1){
+    std::cout << "\r" << "   - 100% (" << counter << " of " << class_size << " )  " << std::endl;
   }
   return 0;
 }
@@ -379,12 +390,23 @@ int DBG::delete_if_above_val(T max){
 /* Delete all of the kmers that are flagged for deletion   */
 int DBG::delete_flagged(){
   khint_t k;
+  uint64_t class_size = size();
+  uint64_t counter = 0;
   for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
     if (kh_exist(class_h, k)){            // test if a bucket contains data
       if (kh_val(class_h, k).is_flag_on(3) == 1){
         kh_del(64, class_h, k);// remove a key-value pair
       }
+      counter++;
+      if (class_print == 1){
+        if ( counter % 20000 == 0){
+          std::cout << "\r" << "   - " << (counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+        }
+      }
     }
+  }
+  if (class_print == 1){
+    std::cout << "\r" << "   - 100% (" << counter << " of " << class_size << " )  " << std::endl;
   }
   return 0;
 }
@@ -396,7 +418,9 @@ int DBG::mark_branching(){
   khint_t k;
   uint64_t key;
   DBnode * pNode;
+  uint64_t class_size = size();
   uint64_t counter = 0;
+  uint64_t op_counter = 0;
   uint16_t fiveprime_counter = 0;
   uint16_t threeprime_counter = 0;
   for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
@@ -422,7 +446,16 @@ int DBG::mark_branching(){
       fiveprime_counter = 0;
       threeprime_counter = 0;
       counter = 0;
+      op_counter++;
+      if (class_print == 1){
+        if ( op_counter % 20000 == 0){
+          std::cout << "\r" << "   - " << (op_counter/(double)class_size)*100 << "% (" << op_counter << " of " << class_size << " )  " << std::flush;
+        }
+      }
     }
+  }
+  if (class_print == 1){
+    std::cout << "\r" << "   - 100% (" << op_counter << " of " << class_size << " )  " << std::endl;
   }
   return 0;
 }
@@ -432,13 +465,24 @@ int DBG::mark_branching(){
 int DBG::mark_all_as_unvisited(){
   khint_t k;
   uint64_t key;
+  uint64_t class_size = size();
+  uint64_t counter = 0;
   DBnode * pNode;
   for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
     if (kh_exist(class_h, k)){            // test if a bucket contains data
       key = kh_key(class_h, k);
       pNode = access_node(key, 0);
       pNode->bit_off(2);
+      counter++;
+      if (class_print == 1){
+        if ( counter % 20000 == 0){
+          std::cout << "\r" << "   - " << (counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+        }
+      }
     }
+  }
+  if (class_print == 1){
+    std::cout << "\r" << "   - 100% (" << counter << " of " << class_size << " )  " << std::endl;
   }
   return 0;
 }
