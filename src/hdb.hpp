@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include "khash.h"
+#include <limits>
 #include <map>
 #include <sstream>
 #include <stdexcept> //std::runtime_error
