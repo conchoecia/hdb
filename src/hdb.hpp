@@ -236,7 +236,7 @@ class DBG {
     just set k and initialize the empty HKC map*/
 template<class T>
 DBG::DBG(T init_k, uint32_t print) {
-  std::cout.precision(2);
+  std::cout.precision(4);
   class_print = print;
   class_k = static_cast<uint32_t>(init_k);
   class_h = kh_init(64);
