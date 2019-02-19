@@ -495,6 +495,8 @@ int DBG::mark_non_het_for_deletion(){
   DBnode * pNode;
   uint16_t mask = 3;
   uint16_t fptp = 0;
+  uint64_t class_size = size();
+  uint64_t counter = 0;
   for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
     if (kh_exist(class_h, k)){            // test if a bucket contains data
       key = kh_key(class_h, k);
@@ -519,7 +521,16 @@ int DBG::mark_non_het_for_deletion(){
         }
       }
       pNode->bit_on(2); // mark this one as visited
+      counter++;
+      if (class_print == 1){
+        if ( counter % 20000 == 0){
+          std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+        }
+      }
     }
+  }
+  if (class_print == 1){
+    std::cout << "\r" << "   - 100% (" << counter << " of " << class_size << " )  " << std::endl;
   }
   return 0;
 }
