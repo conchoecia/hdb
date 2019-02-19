@@ -1607,6 +1607,11 @@ TEST_CASE("test for N in kmer", "[N_kmer_to_uint64]"){
   REQUIRE( kmer_to_uint64(kmer, k) == 0);
 }
 
+/*
+
+  \___/
+  /   \  aka this scenario where the middle bit is one kmer
+  */
 TEST_CASE("test if singleton double branches are identified",
           "[remove_double_branches]"){
   DBG G = DBG(5);
