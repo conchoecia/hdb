@@ -1713,3 +1713,77 @@ TEST_CASE("tests a throw in _gen_HKC_helper_function", "[HKC_function_should_fai
   uint64_t origin = kmer_to_uint64(str, 5);
   REQUIRE_THROWS_AS(G._gen_HKC_helper(origin, 1, 2), std::runtime_error);
 }
+
+TEST_CASE("tests delete if below and delete if above", "[delete_below_and_above]"){
+  //delete everything above 10 and below 5
+  DBG G = DBG(5);
+  std::string str = "GACAC";
+  DBnode * pNode = G.access_node(str, 1);
+  REQUIRE(pNode->count == 1);
+
+  str = "TACAC";
+  pNode = G.access_node(str, 1);
+  pNode->count = 4;
+  REQUIRE(pNode->count == 4);
+
+  str =  "ACACC";
+  pNode = G.access_node(str, 1);
+  pNode->count = 5;
+  REQUIRE(pNode->count == 5);
+
+  str =   "CACCC";
+  pNode = G.access_node(str, 1);
+  pNode->count = 10;
+  REQUIRE(pNode->count == 10);
+
+  str =   "CACCG";
+  pNode = G.access_node(str, 1);
+  pNode->count = 12000;
+  REQUIRE(pNode->count == 12000);
+
+  G.delete_if_below_val(5);
+
+  str = "GACAC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode == nullptr);
+
+  str = "TACAC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode == nullptr);
+
+  str =  "ACACC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode->count == 5);
+
+  str =   "CACCC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode->count == 10);
+
+  str =   "CACCG";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode->count == 12000);
+
+  G.delete_if_above_val(10);
+
+  str = "GACAC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode == nullptr);
+
+  str = "TACAC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode == nullptr);
+
+  str =  "ACACC";
+  pNode = G.access_node(str, 0);
+  pNode->count = 5;
+  REQUIRE(pNode->count == 5);
+
+  str =   "CACCC";
+  pNode = G.access_node(str, 0);
+  pNode->count = 10;
+  REQUIRE(pNode->count == 10);
+
+  str =   "CACCG";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode == nullptr);
+}

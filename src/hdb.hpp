@@ -216,6 +216,8 @@ class DBG {
     // navigate
     int mark_branching();
     int mark_all_as_unvisited();
+    template<typename T> int delete_if_below_val(T min);
+    template<typename T> int delete_if_above_val(T max);
     int delete_flagged();
     int count_nulls();
     int gen_HKCs(std::string filename);
@@ -329,6 +331,34 @@ int DBG::count_nulls(){
     }
   }
   return counter;
+}
+
+/* Mark all kmers with counts below this value for deletion*/
+template<typename T>
+int DBG::delete_if_below_val(T min){
+  khint_t k;
+  for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
+    if (kh_exist(class_h, k)){            // test if a bucket contains data
+      if (kh_val(class_h, k).count < min){
+        kh_del(64, class_h, k);// remove a key-value pair
+      }
+    }
+  }
+  return 0;
+}
+
+/* Mark all kmers with counts below this value for deletion*/
+template<typename T>
+int DBG::delete_if_above_val(T max){
+  khint_t k;
+  for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
+    if (kh_exist(class_h, k)){            // test if a bucket contains data
+      if (kh_val(class_h, k).count > max){
+        kh_del(64, class_h, k);// remove a key-value pair
+      }
+    }
+  }
+  return 0;
 }
 
 /* Delete all of the kmers that are flagged for deletion   */
