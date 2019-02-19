@@ -617,13 +617,12 @@ int DBG::gen_HKCs(std::string ofilename){
       pNode = access_node(key, 0);
       if ( pNode->is_flag_on(2) == 0){
         pNode->bit_on(2);
-        std::cout << "\n\n\n\n\n\n\n\n\n\nHEYYY looking at kmer 5p direction" << uint64_to_kmer(key, class_k) << "\n";
         std::string kmer = uint64_to_kmer(key, class_k);
         //extend in the 5p direction
         kmer = _gen_HKC_helper(key, 0, 0) + kmer;
-        std::cout << "kmer is now " << kmer << "\n";
+        //std::cout << "kmer is now " << kmer << "\n";
         //extend in the 3p direction
-        std::cout << "\n now looking at kmer " << uint64_to_kmer(key, class_k) << " in the 3p direction\n";
+        //std::cout << "\n now looking at kmer " << uint64_to_kmer(key, class_k) << " in the 3p direction\n";
         kmer = kmer + _gen_HKC_helper(key, 1, 1);
         myfile << kmer << std::endl;
       }
@@ -637,7 +636,7 @@ int DBG::gen_HKCs(std::string ofilename){
    */
 std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
                                  uint32_t extend){
-  std::cout << "inside recursion looking at kmer " << uint64_to_kmer(origin, class_k) << " extend dir: " << extend << "\n";
+  //std::cout << "inside recursion looking at kmer " << uint64_to_kmer(origin, class_k) << " extend dir: " << extend << "\n";
   uint32_t start, stop;
   DBnode * pNode;
   uint64_t ori_stem_mask, ext_stem_mask;
@@ -662,7 +661,7 @@ std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
   std::vector<uint64_t> vec = get_extensions(origin, class_k);
   uint32_t ext_pos = 8;
   for (uint32_t i = start; i < stop; i++){
-    std::cout << "  - Pos: " << i << " Ext: " << uint64_to_kmer(vec[i], class_k) << "\n";
+    //std::cout << "  - Pos: " << i << " Ext: " << uint64_to_kmer(vec[i], class_k) << "\n";
     if (vec[i] != origin){ //stops the edge case of homopolymers extending into themselves
       //std::string test = "CCTCC";
       pNode = access_node(vec[i], 0);
@@ -672,13 +671,13 @@ std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
       //}
       if ((pNode != nullptr) && (pNode->is_flag_on(2) == 0)){//we have found the extension if it hasn't been visited
         ext_pos = i;
-        std::cout << "  - found the extension " << uint64_to_kmer(vec[ext_pos], class_k) << "\n";
+        //std::cout << "  - found the extension " << uint64_to_kmer(vec[ext_pos], class_k) << "\n";
         break;
       }
     }
   }
   if (ext_pos == 8){ //we have not found an extension and need to exit
-    std::cout << "    - found no extension\n";
+    //std::cout << "    - found no extension\n";
     return ""; //nothing
   }
   else {
@@ -693,24 +692,23 @@ std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
         same_orientation = 0;
       }
     } else {
-      std::cout <<"eyy in else\n";
       if ( (origin & ori_stem_mask) == ( (vec[ext_pos] & ext_stem_mask) >> 2) ){
         same_orientation = 1;
       } else {
         same_orientation = 0;
       }
     }
-    std::cout << " * origin " << uint64_to_kmer(origin, class_k) << " same ori as ext " << uint64_to_kmer(vec[ext_pos], class_k) << " ?: " << same_orientation << "\n";
-    std::cout << "origin: " << origin << std::endl;
-    std::cout << "   ext: " << vec[ext_pos] << std::endl;
-    std::cout << "origin: ";
-    print_uint64_t(origin);
-    std::cout << "orimas: ";
-    print_uint64_t(ori_stem_mask);
-    std::cout << "   ext: ";
-    print_uint64_t(vec[ext_pos]);
-    std::cout << "stemas: ";
-    print_uint64_t(ext_stem_mask);
+    //std::cout << " * origin " << uint64_to_kmer(origin, class_k) << " same ori as ext " << uint64_to_kmer(vec[ext_pos], class_k) << " ?: " << same_orientation << "\n";
+    //std::cout << "origin: " << origin << std::endl;
+    //std::cout << "   ext: " << vec[ext_pos] << std::endl;
+    //std::cout << "origin: ";
+    //print_uint64_t(origin);
+    //std::cout << "orimas: ";
+    //print_uint64_t(ori_stem_mask);
+    //std::cout << "   ext: ";
+    //print_uint64_t(vec[ext_pos]);
+    //std::cout << "stemas: ";
+    //print_uint64_t(ext_stem_mask);
 
     /* there are now four scenarios.
        0 - 000  extending 5p and the ext is flipped w/r/t the ori. source is 5p.
@@ -733,7 +731,7 @@ std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
     uint32_t decision = (same_orientation << 2) + (extend << 1) + char_cat;
     std::string new_base;
     uint32_t run_dir;
-    std::cout << "  - case : " << decision << "\n";
+    //std::cout << "  - case : " << decision << "\n";
     switch (decision){
       case (0):
         new_base = int_base_to_str[3 - (vec[ext_pos] & 3)];
@@ -745,7 +743,6 @@ std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
         break;
       case (2):
         new_base = int_base_to_str[(vec[ext_pos] >> ((class_k -1) * 2))];
-        std::cout <<"  in case 1 and new base is: " << new_base << "\n";
         run_dir = 0;
         break;
       case (3):
@@ -769,7 +766,7 @@ std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
         run_dir = 1;
         break;
     }
-    std::cout << "    - new base is : " << new_base << "\n";
+    //std::cout << "    - new base is : " << new_base << "\n";
     if (char_cat == 0){
       return _gen_HKC_helper(vec[ext_pos], char_cat, run_dir) + new_base;
     } else {
@@ -779,17 +776,23 @@ std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
   return "N";
 }
 
-template<class Stream, class T>
-int parse_kmer_dump(DBG & G, Stream & stream, T k){
+template<class Stream, class T, class T2>
+int parse_kmer_dump(DBG & G, Stream & stream, T k, T2 print){
   std::string line;
   int skip = 0;
   uint64_t counter = 0;
+  uint64_t linecounter = 0;
   DBnode * pNode;
   uint64_t index;
   uint16_t this_count;
   while(std::getline(stream, line)){
     std::stringstream ss(line);
     while(std::getline(ss, line, '\t') && !skip && counter < 2){
+      if (print){
+        if (linecounter % 20000 == 0){
+          std::cout << "\r" << "   - " << linecounter << "  " << std::flush;
+        }
+      }
       if (counter == 0){
         index = kmer_to_uint64(line, k);
       } else {
@@ -806,6 +809,11 @@ int parse_kmer_dump(DBG & G, Stream & stream, T k){
     pNode = G.access_node(index, 1);
     pNode->count = this_count;
     counter = 0;
+    linecounter++;
+  }
+  if (print){
+    std::cout << "\r" << "   - " << linecounter << "  " << std::flush;
+    std::cout << "\n";
   }
   return 0;
 }
