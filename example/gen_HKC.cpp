@@ -12,13 +12,15 @@ int main(int argc, char **argv) {
   parse_kmer_dump(G, std::cin, vars.k, 1 );
   std::cout << " - Removing all kmers with counts below: " << vars.min_count << std::endl;
   G.delete_if_below_val(vars.min_count);
+  std::cout << " - Removing all kmers with counts above: " << 255 << std::endl;
+  G.delete_if_above_val(255);
   std::cout << " - Marking all branching kmers." << std::endl;
   G.mark_branching();
   std::cout << " - Marking all potential non-heterozygous regions for deletion." << std::endl;
   G.mark_non_het_for_deletion();
   std::cout << " - Deleting potentially non-heterozygous regions.." << std::endl;
   G.delete_flagged();
-  std::cout << " - Removing all kmers with counts below: " << vars.max_count << std::endl;
+  std::cout << " - Removing all kmers with counts above: " << vars.max_count << std::endl;
   G.delete_if_above_val(vars.max_count);
   std::cout << " - Marking all kmers as unvisited." << std::endl;
   G.mark_all_as_unvisited();

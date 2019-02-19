@@ -236,7 +236,7 @@ class DBG {
     just set k and initialize the empty HKC map*/
 template<class T>
 DBG::DBG(T init_k, uint32_t print) {
-  std::cout.precision(4);
+  std::cout.precision(3);
   class_print = print;
   class_k = static_cast<uint32_t>(init_k);
   class_h = kh_init(64);
@@ -505,17 +505,17 @@ int DBG::mark_non_het_for_deletion(){
         fptp = pNode->flag & mask;
         switch (fptp){
           case 3: // both fp and tp branch
-            //std::cout << "both branch\n";
+            std::cout << "both branch\n";
             pNode->bit_on(3); //just delete this node
             break;
           case 1: //just fp branch
             //search in the rp direction
-            //std::cout << "search in the rp dir\n";
+            std::cout << "search in the rp dir\n";
             _mark_nhfd_helper(key, 1);
             break;
           case 2: //just rp branch
             //search in the fp direction
-            //std::cout << "search in the fp dir\n";
+            std::cout << "search in the fp dir\n";
             _mark_nhfd_helper(key, 0);
             break;
         }
@@ -799,7 +799,7 @@ std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
      */
     uint32_t decision = (same_orientation << 2) + (extend << 1) + char_cat;
     std::string new_base;
-    uint32_t run_dir;
+    uint32_t run_dir = 2; //should never be 2. This 
     //std::cout << "  - case : " << decision << "\n";
     switch (decision){
       case (0):
