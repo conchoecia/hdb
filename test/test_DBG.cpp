@@ -541,7 +541,7 @@ TEST_CASE( "tests if the parser for kmer dump input works", "[test_kmer_dump_par
 
   DBG G = DBG(21);
   std::ifstream file(ofilename.c_str());
-  parse_kmer_dump(G, file, G.get_k());
+  parse_kmer_dump(G, file, G.get_k(), 0);
 
   //make sure all the kmers are in the graph
   std::string str = "AAAAAAAAAAAAAAAAAAAAA\t133274\n";
