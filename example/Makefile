@@ -1,7 +1,10 @@
 CC = g++
 CPPFLAGS = --std=c++11 -Wall -I../src/
 
-all: gen_rand_HKC gen_canon
+all: gen_rand_HKC gen_canon gen_HKC_rule
+
+gen_HKC_rule: gen_HKC
+	$(CC) $(CPPFLAGS) gen_HKC.cpp -o gen_HKC
 
 gen_rand_HKC: gen_random_HKC
 	$(CC) $(CPPFLAGS) gen_random_HKC.cpp -o gen_random_HKC
