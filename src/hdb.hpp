@@ -237,7 +237,7 @@ class DBG {
     just set k and initialize the empty HKC map*/
 template<class T>
 DBG::DBG(T init_k, uint32_t print) {
-  std::cout.precision(2);
+  std::cout.precision(4);
   class_print = print;
   class_k = static_cast<uint32_t>(init_k);
   class_h = kh_init(64);
@@ -351,7 +351,7 @@ int DBG::delete_if_below_val(T min){
       counter++;
       if (class_print == 1){
         if ( counter % 20000 == 0){
-          std::cout << "\r" << "   - " << counter/class_size << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          std::cout << "\r" << "   - " << (counter/class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
         }
       }
     }
@@ -804,7 +804,7 @@ int parse_kmer_dump(DBG & G, Stream & stream, T k, T2 print){
     std::stringstream ss(line);
     while(std::getline(ss, line, '\t') && !skip && counter < 2){
       if (print){
-        if (linecounter % 20000 == 0){
+        if (linecounter % 50000 == 0){
           std::cout << "\r" << "   - " << linecounter << "  " << std::flush;
         }
       }
