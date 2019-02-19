@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAGS = --std=c++11 -Wall -I../src/
+CPPFLAGS = --std=c++11 -Wall -I../src/ -O3
 
 all: gen_rand_HKC gen_canon gen_HKC_rule
 

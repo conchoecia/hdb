@@ -78,9 +78,8 @@ unsigned char seq_nt4_table[128] = { // Table to change "ACGTN" to 01234
 // converts 0123 to ACGT
 std::vector<std::string> int_base_to_str = { "A", "C", "G", "T"};
 
-
-/** This function takes a sequence as a char array,
-        and adds all the kmers into the hash table, and counts **/
+/* This function takes a sequence as a char array,
+        and adds all the kmers into the hash table, and counts */
 template<class T>
 uint64_t kmer_to_uint64(std::string str, T inp_k){
   uint32_t k = static_cast<uint32_t>(inp_k);
@@ -341,7 +340,7 @@ int DBG::count_nulls(){
 template<typename T>
 int DBG::delete_if_below_val(T min){
   khint_t k;
-  uint64_t class_size = size();
+  double class_size = static_cast<double>(size());
   uint64_t counter = 0;
   for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
     if (kh_exist(class_h, k)){            // test if a bucket contains data
@@ -351,7 +350,7 @@ int DBG::delete_if_below_val(T min){
       counter++;
       if (class_print == 1){
         if ( counter % 20000 == 0){
-          std::cout << "\r" << "   - " << (counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          std::cout << "\r" << "   - " << (counter/class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
         }
       }
     }
@@ -366,7 +365,7 @@ int DBG::delete_if_below_val(T min){
 template<typename T>
 int DBG::delete_if_above_val(T max){
   khint_t k;
-  uint64_t class_size = size();
+  double class_size = static_cast<double>(size());
   uint64_t counter = 0;
   for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
     if (kh_exist(class_h, k)){            // test if a bucket contains data
@@ -376,7 +375,7 @@ int DBG::delete_if_above_val(T max){
       counter++;
       if (class_print == 1){
         if ( counter % 20000 == 0){
-          std::cout << "\r" << "   - " << (counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          std::cout << "\r" << "   - " << (counter/class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
         }
       }
     }
@@ -390,7 +389,7 @@ int DBG::delete_if_above_val(T max){
 /* Delete all of the kmers that are flagged for deletion   */
 int DBG::delete_flagged(){
   khint_t k;
-  uint64_t class_size = size();
+  double class_size = static_cast<double>(size());
   uint64_t counter = 0;
   for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
     if (kh_exist(class_h, k)){            // test if a bucket contains data
@@ -400,7 +399,7 @@ int DBG::delete_flagged(){
       counter++;
       if (class_print == 1){
         if ( counter % 20000 == 0){
-          std::cout << "\r" << "   - " << (counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          std::cout << "\r" << "   - " << (counter/class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
         }
       }
     }
@@ -418,7 +417,7 @@ int DBG::mark_branching(){
   khint_t k;
   uint64_t key;
   DBnode * pNode;
-  uint64_t class_size = size();
+  double class_size = static_cast<double>(size());
   uint64_t counter = 0;
   uint64_t op_counter = 0;
   uint16_t fiveprime_counter = 0;
@@ -449,7 +448,7 @@ int DBG::mark_branching(){
       op_counter++;
       if (class_print == 1){
         if ( op_counter % 20000 == 0){
-          std::cout << "\r" << "   - " << (op_counter/(double)class_size)*100 << "% (" << op_counter << " of " << class_size << " )  " << std::flush;
+          std::cout << "\r" << "   - " << (op_counter/class_size)*100 << "% (" << op_counter << " of " << class_size << " )  " << std::flush;
         }
       }
     }
@@ -465,7 +464,7 @@ int DBG::mark_branching(){
 int DBG::mark_all_as_unvisited(){
   khint_t k;
   uint64_t key;
-  uint64_t class_size = size();
+  double class_size = static_cast<double>(size());
   uint64_t counter = 0;
   DBnode * pNode;
   for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
@@ -476,7 +475,7 @@ int DBG::mark_all_as_unvisited(){
       counter++;
       if (class_print == 1){
         if ( counter % 20000 == 0){
-          std::cout << "\r" << "   - " << (counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          std::cout << "\r" << "   - " << (counter/class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
         }
       }
     }
