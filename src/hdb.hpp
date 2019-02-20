@@ -583,12 +583,12 @@ int DBG::_mark_nhfd_helper(uint64_t source,
   // END OF BLOCK TO FIND EXT
 
   while (done == 0){
-    //std::cout << "i    Source: " << uint64_to_kmer(source, class_k) << std::endl;
-    //std::cout << "i Extension: " << uint64_to_kmer(ext, class_k) << std::endl;
-    //std::cout << "i    Source: ";
-    //print_uint64_t(source);
-    //std::cout << "i Extension: ";
-    //print_uint64_t(ext);
+    std::cout << "i    Source: " << uint64_to_kmer(source, class_k) << std::endl;
+    std::cout << "i Extension: " << uint64_to_kmer(ext, class_k) << std::endl;
+    std::cout << "i    Source: ";
+    print_uint64_t(source);
+    std::cout << "i Extension: ";
+    print_uint64_t(ext);
     pNode = access_node(ext, 0);
     //first mark the node for deletion. it is no good
     pNode->bit_on(2);
