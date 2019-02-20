@@ -1166,7 +1166,9 @@ TEST_CASE( "test if we can correctly identify the potentially homozygous stretch
   pNode = G.access_node(str, 1);
   str =   "GAAAT"; // ATTTC
   pNode = G.access_node(str, 1);
-  //G.print_graph();
+  std::cout << "this is the short-ish branching hom region graph\n";
+  G.print_graph();
+  std::cout << "END GRAPH\n";
   G.mark_branching();
 
   std::vector<uint64_t> vec;
@@ -1293,11 +1295,11 @@ TEST_CASE( "test if we can correctly identify the potentially homozygous stretch
   G.mark_non_het_for_deletion();
   str = "CGGGG"; //canonical - 3p ext to T
   pNode = G.access_node(str, 0);
-  REQUIRE(pNode->is_flag_on(2) == 1);
+  REQUIRE(pNode->is_flag_on(2) == 0);
   REQUIRE(pNode->is_flag_on(3) == 0);
   str = "TGGGG"; //canonical GTGTA
   pNode = G.access_node(str, 0);
-  REQUIRE(pNode->is_flag_on(2) == 1);
+  REQUIRE(pNode->is_flag_on(2) == 0);
   REQUIRE(pNode->is_flag_on(3) == 0);
   str =  "GGGGA"; //canonical - should branch 5' not 3'
   pNode = G.access_node(str, 0);
@@ -1313,22 +1315,22 @@ TEST_CASE( "test if we can correctly identify the potentially homozygous stretch
   REQUIRE(pNode->is_flag_on(3) == 1);
   str =   "GAAAA"; //canonical CAAAG - should not branch
   pNode = G.access_node(str, 0);
-  REQUIRE(pNode->is_flag_on(2) == 1);
+  REQUIRE(pNode->is_flag_on(2) == 0);
   REQUIRE(pNode->is_flag_on(3) == 0);
   str =   "GAAAT"; //canonical AAAAG - should not branch
   pNode = G.access_node(str, 0);
-  REQUIRE(pNode->is_flag_on(2) == 1);
+  REQUIRE(pNode->is_flag_on(2) == 0);
   REQUIRE(pNode->is_flag_on(3) == 0);
 
   G.delete_flagged();
 
   str = "CGGGG"; //canonical - 3p ext to T
   pNode = G.access_node(str, 0);
-  REQUIRE(pNode->is_flag_on(2) == 1);
+  REQUIRE(pNode->is_flag_on(2) == 0);
   REQUIRE(pNode->is_flag_on(3) == 0);
   str = "TGGGG"; //canonical GTGTA
   pNode = G.access_node(str, 0);
-  REQUIRE(pNode->is_flag_on(2) == 1);
+  REQUIRE(pNode->is_flag_on(2) == 0);
   REQUIRE(pNode->is_flag_on(3) == 0);
   str =  "GGGGA"; //canonical - should branch 5' not 3'
   pNode = G.access_node(str, 0);
@@ -1341,11 +1343,11 @@ TEST_CASE( "test if we can correctly identify the potentially homozygous stretch
   REQUIRE( pNode == nullptr);
   str =   "GAAAA"; //canonical CAAAG - should not branch
   pNode = G.access_node(str, 0);
-  REQUIRE(pNode->is_flag_on(2) == 1);
+  REQUIRE(pNode->is_flag_on(2) == 0);
   REQUIRE(pNode->is_flag_on(3) == 0);
   str =   "GAAAT"; //canonical AAAAG - should not branch
   pNode = G.access_node(str, 0);
-  REQUIRE(pNode->is_flag_on(2) == 1);
+  REQUIRE(pNode->is_flag_on(2) == 0);
   REQUIRE(pNode->is_flag_on(3) == 0);
 }
 
@@ -1546,12 +1548,14 @@ TEST_CASE("tests the HKC gen number 5", "[test_hkc_gen5]"){
   REQUIRE(pNode->is_flag_on(0) == 1);
   REQUIRE(pNode->is_flag_on(1) == 0);
 
+  std::cout << "\n\nin test that breaks for cycles\n";
+  std::cout << "string is: " << str << std::endl;
   G.mark_non_het_for_deletion();
 
   for (uint32_t i = 1; i < str.size()-ksize; i++){
     std::string str2 = str.substr(i,ksize);
     pNode = G.access_node(str2, 0);
-    //std::cout << "accessing: " << str2 << std::endl;
+    //std::cout << "accessing: " << str2 << " Delete? " << pNode->is_flag_on(3) << std::endl;
     REQUIRE(pNode != nullptr);
     REQUIRE(pNode->is_flag_on(3) == 1);
   }
@@ -1594,6 +1598,71 @@ TEST_CASE("tests the HKC gen number 5", "[test_hkc_gen5]"){
   //G.print_graph();
 }
 
+TEST_CASE("tests for cases where there is a cycle of kmers", "[test_cycles]"){
+  std::string str;
+  uint32_t ksize = 17;
+  DBG G = DBG(ksize);
+  DBnode * pNode;
+  std::vector<std::string> vec;
+  vec.push_back( "TAAAGCGGTACGCTTTA");
+  vec.push_back( "GCGTACCGCTTTAAAGC");
+  vec.push_back( "CGCTTTAAAGCGGTACG");
+  vec.push_back( "AGCGTACCGCTTTAAAG");
+  vec.push_back( "AAGCGTACCGCTTTAAA");
+  vec.push_back( "AAGCGGTACGCTTTAAA");
+  vec.push_back( "AAAGCGTACCGCTTTAA");
+  vec.push_back( "AAAGCGGTACGCTTTAA");
+  vec.push_back( "TACCGCTTTAAAGCGTA");
+  vec.push_back( "GCGGTACGCTTTAAAGC");
+  vec.push_back( "CGCTTTAAAGCGTACCG");
+  vec.push_back( "CCGCTTTAAAGCGTACC");
+  vec.push_back( "AGCGGTACGCTTTAAAG");
+  vec.push_back( "ACGCTTTAAAGCGGTAC");
+  vec.push_back( "ACCGCTTTAAAGCGTAC");
+  for (const auto & n: vec){
+    pNode = G.access_node(n, 1);
+    REQUIRE(pNode->is_flag_on(3) == 0);
+    REQUIRE(pNode->is_flag_on(2) == 0);
+    REQUIRE(pNode->is_flag_on(1) == 0);
+    REQUIRE(pNode->is_flag_on(0) == 0);
+  }
+  str = "ACCGCTTTAAAGCGTAC";
+  //mark one as branching
+  pNode = G.access_node(str, 1);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  pNode->bit_on(0);
+  REQUIRE(pNode->is_flag_on(0) == 1);
+  G.mark_non_het_for_deletion();
+  //first make sure that everything has been visited and is marked for deletion
+  for (const auto & n: vec){
+    pNode = G.access_node(n, 1);
+    if (n != str){
+      std::cout << "accessing: " << n << std::endl;
+      REQUIRE(pNode->is_flag_on(3) == 1);
+      REQUIRE(pNode->is_flag_on(2) == 1);
+      REQUIRE(pNode->is_flag_on(1) == 0);
+      REQUIRE(pNode->is_flag_on(0) == 0);
+    }
+    else{
+      REQUIRE(pNode->is_flag_on(3) == 1);
+      REQUIRE(pNode->is_flag_on(2) == 1);
+      REQUIRE(pNode->is_flag_on(1) == 0);
+      REQUIRE(pNode->is_flag_on(0) == 1);
+    }
+  }
+  G.delete_flagged();
+
+  //now make sure everything has been deleted
+  for (const auto & n: vec){
+    pNode = G.access_node(n, 0);
+    REQUIRE(pNode == nullptr);
+  }
+
+  //std::cout << "BEGIN CYCLE\n";
+  //G.print_graph();
+  //std::cout << "END CYCLE\n";
+}
+
 TEST_CASE("some tests for the get_extensions function", "[get_extensions_str_test]"){
   std::string kmer = "GGACNATAC";
   uint32_t k = 9;
@@ -1608,7 +1677,6 @@ TEST_CASE("test for N in kmer", "[N_kmer_to_uint64]"){
 }
 
 /*
-
   \___/
   /   \  aka this scenario where the middle bit is one kmer
   */

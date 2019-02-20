@@ -520,7 +520,6 @@ int DBG::mark_non_het_for_deletion(){
             break;
         }
       }
-      pNode->bit_on(2); // mark this one as visited
       counter++;
       if (class_print == 1){
         if ( counter % 20000 == 0){
@@ -591,6 +590,10 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     print_uint64_t(ext);
     pNode = access_node(ext, 0);
     //first mark the node for deletion. it is no good
+    if (pNode->is_flag_on(2) == 1){ //could be a cycle. break it.
+      pNode->bit_on(3);
+      return 0;
+    }
     pNode->bit_on(2);
     pNode->bit_on(3);
     //second determine if we stop here from branch or terminal
@@ -603,7 +606,7 @@ int DBG::_mark_nhfd_helper(uint64_t source,
         break;
       }
     }
-    //std::cout << "extension pos is: " << pos << std::endl;
+    //std::cout << "  - extension pos from ext->source is: " << pos << std::endl;
     if (pos >= 8){ //we should have found the source
       //std::cout << "   Source: " << source << std::endl;
       //std::cout << "Extension: " << ext << std::endl;
@@ -627,12 +630,16 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     //now figure out if there are zero, one, or more extensions
     uint32_t counter = 0;
     uint32_t new_ext_index = 8;
+    //TODO Optimize this loop.
     for (uint32_t i = start; i < stop; i++){
-      //std::cout << "  - looking at: " << uint64_to_kmer(vec[i], class_k) << std::endl;
+      //std::cout << "    - looking at: " << uint64_to_kmer(vec[i], class_k) << std::endl;
       pNodeT = access_node(vec[i], 0);
       if (pNodeT != nullptr){ //not a null ptr,
-        counter++;
-        new_ext_index = i;
+        //std::cout << "      - flag: " << pNode->flag << std::endl;
+        //if (pNodeT->is_flag_on(2) == 0){ //if not visited. stops cycles
+          counter++;
+          new_ext_index = i;
+        //}
       }
     }
     if (counter == 1){ //we found the extension
