@@ -505,17 +505,17 @@ int DBG::mark_non_het_for_deletion(){
         fptp = pNode->flag & mask;
         switch (fptp){
           case 3: // both fp and tp branch
-            std::cout << "both branch\n";
+            //std::cout << "both branch\n";
             pNode->bit_on(3); //just delete this node
             break;
           case 1: //just fp branch
             //search in the rp direction
-            std::cout << "search in the rp dir\n";
+            //std::cout << "search in the rp dir\n";
             _mark_nhfd_helper(key, 1);
             break;
           case 2: //just rp branch
             //search in the fp direction
-            std::cout << "search in the fp dir\n";
+            //std::cout << "search in the fp dir\n";
             _mark_nhfd_helper(key, 0);
             break;
         }
@@ -582,12 +582,12 @@ int DBG::_mark_nhfd_helper(uint64_t source,
   // END OF BLOCK TO FIND EXT
 
   while (done == 0){
-    std::cout << "i    Source: " << uint64_to_kmer(source, class_k) << std::endl;
-    std::cout << "i Extension: " << uint64_to_kmer(ext, class_k) << std::endl;
-    std::cout << "i    Source: ";
-    print_uint64_t(source);
-    std::cout << "i Extension: ";
-    print_uint64_t(ext);
+    //std::cout << "i    Source: " << uint64_to_kmer(source, class_k) << std::endl;
+    //std::cout << "i Extension: " << uint64_to_kmer(ext, class_k) << std::endl;
+    //std::cout << "i    Source: ";
+    //print_uint64_t(source);
+    //std::cout << "i Extension: ";
+    //print_uint64_t(ext);
     pNode = access_node(ext, 0);
     //first mark the node for deletion. it is no good
     if (pNode->is_flag_on(2) == 1){ //could be a cycle. break it.
