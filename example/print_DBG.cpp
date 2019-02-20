@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
   Vars vars = process_cl_args(argc, argv);
   DBG G = DBG(vars.k, 1);
   //std::cout << " - Reading kmers from stdin." << std::endl;
-  parse_kmer_dump(G, std::cin, vars.k, 0 );
+  parse_kmer_dump(G, std::cin, vars.k, vars.min_count, 0 );
   std::cout << "source\ttarget\n";
   G.print_graph();
   return 0;

@@ -852,8 +852,11 @@ std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
   return "N";
 }
 
-template<class Stream, class T, class T2>
-int parse_kmer_dump(DBG & G, Stream & stream, T k, T2 print){
+/* This just parses a stream of kmers coming from stdin
+   The min value keeps the memory footprint low by rejecting erroneous kmers
+  */
+template<class Stream, class T, class T2, class T3>
+int parse_kmer_dump(DBG & G, Stream & stream, T k, T2 min, T3 print){
   std::string line;
   int skip = 0;
   uint64_t counter = 0;
@@ -882,8 +885,10 @@ int parse_kmer_dump(DBG & G, Stream & stream, T k, T2 print){
       }
       counter++;
     }
-    pNode = G.access_node(index, 1);
-    pNode->count = this_count;
+    if (this_count >= min){
+      pNode = G.access_node(index, 1);
+      pNode->count = this_count;
+    }
     counter = 0;
     linecounter++;
   }
