@@ -9,8 +9,6 @@
 #include "hdb.hpp"
 //#include "gen_HKC.hpp"
 
-
-
 TEST_CASE ("tests if the kmer_to_uint64(str, k) works", "[kmer_to_uint64_test]"){
   std::string str = "AAAAAAAAAAAAAAAAAAAAA";
   REQUIRE(kmer_to_uint64(str, 21) == 0);
@@ -1151,7 +1149,7 @@ TEST_CASE( "test if we can correctly identify the potentially homozygous stretch
   DBG G = DBG(5);
   DBnode * pNode;
   std::string str;
-
+  std::cout << "just made a graph\n";
   str = "CGGGG"; // canon CCCCG
   pNode = G.access_node(str, 1);
   str = "TGGGG"; // canon CCCCA
