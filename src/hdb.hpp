@@ -229,7 +229,8 @@ class DBG {
   private:                // begin private section
     uint32_t class_k;                // member variable
     uint32_t class_print;
-    khash_t(64) *class_h; //initialise the hash table of kmers to index
+    //khash_t(64) *class_h; //initialise the hash table of kmers to index
+    khash_t(64) * h_array[16384];
 };
 
 /* constructor of HKCgraph,
@@ -239,12 +240,18 @@ DBG::DBG(T init_k, uint32_t print) {
   std::cout.precision(3);
   class_print = print;
   class_k = static_cast<uint32_t>(init_k);
-  class_h = kh_init(64);
+  for (uint32_t i =0; i < 16384; i++){
+    h_array[i] = kh_init(64);
+  }
+  //class_h = kh_init(64);
 }
 
 /* destructor. just tear down the hash table */
 DBG::~DBG() {
-  kh_destroy(64, class_h);              // deallocate the hash table
+  for (uint32_t i =0; i < 16384; i++){
+    kh_destroy(64, h_array[i]);              // deallocate the hash table
+  }
+  //kh_destroy(64, class_h);              // deallocate the hash table
 }
 
 /* just returns k*/
@@ -255,7 +262,12 @@ uint32_t DBG::get_k(){
 /* Returns the total size of the hash
    */
 uint64_t DBG::size(){
-  return static_cast<uint64_t>(kh_size(class_h));
+  uint64_t sum = 0;
+  for (uint32_t i =0; i < 16384; i++){
+    sum += static_cast<uint64_t>(kh_size(h_array[i]));
+  }
+  return sum;
+  //return static_cast<uint64_t>(kh_size(class_h));
 }
 
 /* If put is 1, we are adding to the graph
@@ -268,25 +280,26 @@ uint64_t DBG::size(){
 template<class T>
 DBnode* DBG::access_node(uint64_t index, T put ){
   uint64_t lookup = canon(index, class_k);
+  uint64_t hash_index = hash_64(lookup) & 16383; //mask the first 14
   khint_t k;
-  k = kh_get(64, class_h, lookup); // query the hash table
+  k = kh_get(64, h_array[hash_index], lookup); // query the hash table
   int is_missing, absent;
-  is_missing = (int)(k == kh_end(class_h));
+  is_missing = (int)(k == kh_end(h_array[hash_index]));
   if (put == 1){ //insert
     if (is_missing){
-      k = kh_put(64, class_h, lookup, &absent);
-      kh_val(class_h, k).count = 1;
-      kh_val(class_h, k).flag = 0;
+      k = kh_put(64, h_array[hash_index], lookup, &absent);
+      kh_val(h_array[hash_index], k).count = 1;
+      kh_val(h_array[hash_index], k).flag = 0;
       //when we insert we also need to add edges
     } else {
-      kh_val(class_h, k).count += 1;
+      kh_val(h_array[hash_index], k).count += 1;
       //don't mess with the flag here. we already instantiated it
     }
   }
   else{
     if (is_missing) return nullptr;
   }
-  return &( kh_val(class_h, k) );
+  return &( kh_val(h_array[hash_index], k) );
 }
 
 template<class T>
@@ -304,14 +317,15 @@ DBnode* DBG::access_node(std::string str, T put ){
 */
 int DBG::remove_node(uint64_t index){
   uint64_t lookup = canon(index, class_k);
+  uint64_t hash_index = hash_64(lookup) & 16383; //mask the first 14
   khint_t k;
-  k = kh_get(64, class_h, lookup); // query the hash table
+  k = kh_get(64, h_array[hash_index], lookup); // query the hash table
   int is_missing;
-  is_missing = (int)(k == kh_end(class_h));
+  is_missing = (int)(k == kh_end(h_array[hash_index]));
   if (is_missing){
     return 0;
   } else {
-    kh_del(64, class_h, k);// remove a key-value pair
+    kh_del(64, h_array[hash_index], k);// remove a key-value pair
     return 1;
   }
   return 0;
@@ -324,12 +338,14 @@ int DBG::count_nulls(){
   uint64_t key;
   DBnode * pNode;
   int counter = 0;
-  for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
-    if (kh_exist(class_h, k)){            // test if a bucket contains data
-      key = kh_key(class_h, k);
-      pNode = access_node(key, 0);
-      if (pNode == NULL){
-        counter++;
+  for (uint32_t i = 0; i < 16384; i++){
+    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
+      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
+        key = kh_key(h_array[i], k);
+        pNode = access_node(key, 0);
+        if (pNode == NULL){
+          counter++;
+        }
       }
     }
   }
@@ -342,15 +358,17 @@ int DBG::delete_if_below_val(T min){
   khint_t k;
   uint64_t class_size = size();
   uint64_t counter = 0;
-  for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
-    if (kh_exist(class_h, k)){            // test if a bucket contains data
-      if (kh_val(class_h, k).count < min){
-        kh_del(64, class_h, k);// remove a key-value pair
-      }
-      counter++;
-      if (class_print == 1){
-        if ( counter % 20000 == 0){
-          std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+  for (uint32_t i = 0; i < 16384; i++){
+    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
+      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
+        if (kh_val(h_array[i], k).count < min){
+          kh_del(64, h_array[i], k);// remove a key-value pair
+        }
+        counter++;
+        if (class_print == 1){
+          if ( counter % 20000 == 0){
+            std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          }
         }
       }
     }
@@ -367,15 +385,17 @@ int DBG::delete_if_above_val(T max){
   khint_t k;
   uint64_t class_size = size();
   uint64_t counter = 0;
-  for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
-    if (kh_exist(class_h, k)){            // test if a bucket contains data
-      if (kh_val(class_h, k).count > max){
-        kh_del(64, class_h, k);// remove a key-value pair
-      }
-      counter++;
-      if (class_print == 1){
-        if ( counter % 20000 == 0){
-          std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+  for (uint32_t i = 0; i < 16384; i++){
+    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
+      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
+        if (kh_val(h_array[i], k).count > max){
+          kh_del(64, h_array[i], k);// remove a key-value pair
+        }
+        counter++;
+        if (class_print == 1){
+          if ( counter % 20000 == 0){
+            std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          }
         }
       }
     }
@@ -391,15 +411,17 @@ int DBG::delete_flagged(){
   khint_t k;
   uint64_t class_size = size();
   uint64_t counter = 0;
-  for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
-    if (kh_exist(class_h, k)){            // test if a bucket contains data
-      if (kh_val(class_h, k).is_flag_on(3) == 1){
-        kh_del(64, class_h, k);// remove a key-value pair
-      }
-      counter++;
-      if (class_print == 1){
-        if ( counter % 20000 == 0){
-          std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+  for (uint32_t i = 0; i < 16384; i++){
+    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
+      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
+        if (kh_val(h_array[i], k).is_flag_on(3) == 1){
+          kh_del(64, h_array[i], k);// remove a key-value pair
+        }
+        counter++;
+        if (class_print == 1){
+          if ( counter % 20000 == 0){
+            std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          }
         }
       }
     }
@@ -422,33 +444,35 @@ int DBG::mark_branching(){
   uint64_t op_counter = 0;
   uint16_t fiveprime_counter = 0;
   uint16_t threeprime_counter = 0;
-  for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
-    if (kh_exist(class_h, k)){            // test if a bucket contains data
-      key = kh_key(class_h, k);
-      pNode = access_node(key, 0);
-      std::vector<uint64_t> vec = get_extensions(key, class_k);
-      //optimizes the loop a bit
-      while ((counter < 4) && (fiveprime_counter < 2) ) {
-        if (access_node(vec[counter], 0) != nullptr){
-          fiveprime_counter++;
+  for (uint32_t i = 0; i < 16384; i++){
+    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
+      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
+        key = kh_key(h_array[i], k);
+        pNode = access_node(key, 0);
+        std::vector<uint64_t> vec = get_extensions(key, class_k);
+        //optimizes the loop a bit
+        while ((counter < 4) && (fiveprime_counter < 2) ) {
+          if (access_node(vec[counter], 0) != nullptr){
+            fiveprime_counter++;
+          }
+          counter++;
         }
-        counter++;
-      }
-      while ((counter < 8) && (threeprime_counter < 2) ) {
-        if (access_node(vec[counter], 0) != nullptr){
-          threeprime_counter++;
+        while ((counter < 8) && (threeprime_counter < 2) ) {
+          if (access_node(vec[counter], 0) != nullptr){
+            threeprime_counter++;
+          }
+          counter++;
         }
-        counter++;
-      }
-      if (fiveprime_counter >= 2) pNode->bit_on(0);
-      if (threeprime_counter >= 2) pNode->bit_on(1);
-      fiveprime_counter = 0;
-      threeprime_counter = 0;
-      counter = 0;
-      op_counter++;
-      if (class_print == 1){
-        if ( op_counter % 20000 == 0){
-          std::cout << "\r" << "   - " << ((double)op_counter/(double)class_size)*100 << "% (" << op_counter << " of " << class_size << " )  " << std::flush;
+        if (fiveprime_counter >= 2) pNode->bit_on(0);
+        if (threeprime_counter >= 2) pNode->bit_on(1);
+        fiveprime_counter = 0;
+        threeprime_counter = 0;
+        counter = 0;
+        op_counter++;
+        if (class_print == 1){
+          if ( op_counter % 20000 == 0){
+            std::cout << "\r" << "   - " << ((double)op_counter/(double)class_size)*100 << "% (" << op_counter << " of " << class_size << " )  " << std::flush;
+          }
         }
       }
     }
@@ -467,15 +491,17 @@ int DBG::mark_all_as_unvisited(){
   uint64_t class_size = size();
   uint64_t counter = 0;
   DBnode * pNode;
-  for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
-    if (kh_exist(class_h, k)){            // test if a bucket contains data
-      key = kh_key(class_h, k);
-      pNode = access_node(key, 0);
-      pNode->bit_off(2);
-      counter++;
-      if (class_print == 1){
-        if ( counter % 20000 == 0){
-          std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+  for (uint32_t i = 0; i < 16384; i++){
+    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
+      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
+        key = kh_key(h_array[i], k);
+        pNode = access_node(key, 0);
+        pNode->bit_off(2);
+        counter++;
+        if (class_print == 1){
+          if ( counter % 20000 == 0){
+            std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          }
         }
       }
     }
@@ -497,33 +523,35 @@ int DBG::mark_non_het_for_deletion(){
   uint16_t fptp = 0;
   uint64_t class_size = size();
   uint64_t counter = 0;
-  for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
-    if (kh_exist(class_h, k)){            // test if a bucket contains data
-      key = kh_key(class_h, k);
-      pNode = access_node(key, 0);
-      if ( pNode->is_flag_on(2) == 0){ //if not yet visited
-        fptp = pNode->flag & mask;
-        switch (fptp){
-          case 3: // both fp and tp branch
-            //std::cout << "both branch\n";
-            pNode->bit_on(3); //just delete this node
-            break;
-          case 1: //just fp branch
-            //search in the rp direction
-            //std::cout << "search in the rp dir\n";
-            _mark_nhfd_helper(key, 1);
-            break;
-          case 2: //just rp branch
-            //search in the fp direction
-            //std::cout << "search in the fp dir\n";
-            _mark_nhfd_helper(key, 0);
-            break;
+  for (uint32_t i = 0; i < 16384; i++){
+    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
+      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
+        key = kh_key(h_array[i], k);
+        pNode = access_node(key, 0);
+        if ( pNode->is_flag_on(2) == 0){ //if not yet visited
+          fptp = pNode->flag & mask;
+          switch (fptp){
+            case 3: // both fp and tp branch
+              //std::cout << "both branch\n";
+              pNode->bit_on(3); //just delete this node
+              break;
+            case 1: //just fp branch
+              //search in the rp direction
+              //std::cout << "search in the rp dir\n";
+              _mark_nhfd_helper(key, 1);
+              break;
+            case 2: //just rp branch
+              //search in the fp direction
+              //std::cout << "search in the fp dir\n";
+              _mark_nhfd_helper(key, 0);
+              break;
+          }
         }
-      }
-      counter++;
-      if (class_print == 1){
-        if ( counter % 20000 == 0){
-          std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+        counter++;
+        if (class_print == 1){
+          if ( counter % 20000 == 0){
+            std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          }
         }
       }
     }
@@ -540,6 +568,7 @@ int DBG::_mark_nhfd_helper(uint64_t source,
                            uint32_t dir){
   khint_t k;
   uint64_t ext;
+  uint64_t hash_index;
   DBnode * pNode;
   DBnode * pNodeT; //just a temp
   pNode = access_node(source, 0);
@@ -573,8 +602,9 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     }
   }
   if (t_counter == 1){ //we found the extension
-    k = kh_get(64, class_h, dec[ind]); // query the hash table
-    ext = kh_key(class_h, k);
+    hash_index = hash_64(dec[ind]) & 16383;
+    k = kh_get(64, h_array[hash_index], dec[ind]); // query the hash table
+    ext = kh_key(h_array[hash_index], k);
   }
   else{ //there are multiple options or none - we should just delete this
     return 0;
@@ -644,8 +674,9 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     }
     if (counter == 1){ //we found the extension
       source = ext;
-      k = kh_get(64, class_h, vec[new_ext_index]); // query the hash table
-      ext = kh_key(class_h, k);
+      hash_index = hash_64(vec[new_ext_index]) & 16383;
+      k = kh_get(64, h_array[hash_index], vec[new_ext_index]); // query the hash table
+      ext = kh_key(h_array[hash_index], k);
     }
     else{ //we found the termination of the homozygous region
       done = 1;
@@ -658,18 +689,21 @@ int DBG::_mark_nhfd_helper(uint64_t source,
 /* print out the graph */
 int DBG::print_graph(){
   khint_t k, k2;
-  uint64_t key, key2;
-  for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
-    if (kh_exist(class_h, k)){            // test if a bucket contains data
-      key = kh_key(class_h, k);
-      //std::cout << uint64_to_kmer(key, class_k) << "\n";
-      std::vector<uint64_t> vec = get_extensions(key, class_k);
-      for (const auto & n: vec){
-        k2 = kh_get(64, class_h, n); // query the hash table
-        if ( k2 != kh_end(class_h)){  // test if it is missing
-          key2 = kh_key(class_h, k2);
-          if (key < key2){
-            std::cout << uint64_to_kmer(key, class_k) << "\t" << uint64_to_kmer(key2, class_k) << '\n';
+  uint64_t key, key2, hash_index;
+  for (uint32_t i = 0; i < 16384; i++){
+    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
+      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
+        key = kh_key(h_array[i], k);
+        //std::cout << uint64_to_kmer(key, class_k) << "\n";
+        std::vector<uint64_t> vec = get_extensions(key, class_k);
+        for (const auto & n: vec){
+          hash_index = hash_64(n) & 16383;
+          k2 = kh_get(64, h_array[hash_index], n); // query the hash table
+          if ( k2 != kh_end(h_array[hash_index])){  // test if it is missing
+            key2 = kh_key(h_array[hash_index], k2);
+            if (key < key2){
+              std::cout << uint64_to_kmer(key, class_k) << "\t" << uint64_to_kmer(key2, class_k) << '\n';
+            }
           }
         }
       }
@@ -687,20 +721,22 @@ int DBG::gen_HKCs(std::string ofilename){
   myfile.open (ofilename);
 
   DBnode * pNode;
-  for (k = kh_begin(class_h); k != kh_end(class_h); ++k){  // traverse
-    if (kh_exist(class_h, k)){            // test if a bucket contains data
-      key = kh_key(class_h, k);
-      pNode = access_node(key, 0);
-      if ( pNode->is_flag_on(2) == 0){
-        pNode->bit_on(2);
-        std::string kmer = uint64_to_kmer(key, class_k);
-        //extend in the 5p direction
-        kmer = _gen_HKC_helper(key, 0, 0) + kmer;
-        //std::cout << "kmer is now " << kmer << "\n";
-        //extend in the 3p direction
-        //std::cout << "\n now looking at kmer " << uint64_to_kmer(key, class_k) << " in the 3p direction\n";
-        kmer = kmer + _gen_HKC_helper(key, 1, 1);
-        myfile << kmer << std::endl;
+  for (uint32_t i = 0; i < 16384; i++){
+    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
+      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
+        key = kh_key(h_array[i], k);
+        pNode = access_node(key, 0);
+        if ( pNode->is_flag_on(2) == 0){
+          pNode->bit_on(2);
+          std::string kmer = uint64_to_kmer(key, class_k);
+          //extend in the 5p direction
+          kmer = _gen_HKC_helper(key, 0, 0) + kmer;
+          //std::cout << "kmer is now " << kmer << "\n";
+          //extend in the 3p direction
+          //std::cout << "\n now looking at kmer " << uint64_to_kmer(key, class_k) << " in the 3p direction\n";
+          kmer = kmer + _gen_HKC_helper(key, 1, 1);
+          myfile << kmer << std::endl;
+        }
       }
     }
   }
@@ -866,12 +902,12 @@ int parse_kmer_dump(DBG & G, Stream & stream, T k, T2 min, T3 print){
   uint16_t this_count;
   while(std::getline(stream, line)){
     std::stringstream ss(line);
-    while(std::getline(ss, line, '\t') && !skip && counter < 2){
-      if (print){
-        if (linecounter % 50000 == 0){
-          std::cout << "\r" << "   - " << linecounter << "  " << std::flush;
-        }
+    if (print){
+      if (linecounter % 50000 == 0){
+        std::cout << "\r" << "   - " << linecounter << "  " << std::flush;
       }
+    }
+    while(std::getline(ss, line, '\t') && !skip && counter < 2){
       if (counter == 0){
         index = kmer_to_uint64(line, k);
       } else {
