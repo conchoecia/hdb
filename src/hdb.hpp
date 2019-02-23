@@ -55,6 +55,18 @@ static inline uint64_t hash_64(uint64_t key)
   return key;
 }
 
+static inline uint64_t hash_64_mask(uint64_t key)
+{ // more sophisticated hash function to reduce collisions
+  key = (~key + (key << 21)); // key = (key << 21) - key - 1;
+  key = key ^ key >> 24;
+  key = ((key + (key << 3)) + (key << 8)); // key * 265
+  key = key ^ key >> 14;
+  key = ((key + (key << 2)) + (key << 4)); // key * 21
+  key = key ^ key >> 28;
+  key = (key + (key << 31)) & 16383;
+  return key;
+}
+
 void print_uint64_t(uint64_t s){
   for (uint32_t j = 63; (j >= 0) && (j < 64); j--){
     std::cout << !!(s & (1UL<<j));
@@ -280,7 +292,7 @@ uint64_t DBG::size(){
 template<class T>
 DBnode* DBG::access_node(uint64_t index, T put ){
   uint64_t lookup = canon(index, class_k);
-  uint64_t hash_index = hash_64(lookup) & 16383; //mask the first 14
+  uint64_t hash_index = hash_64_mask(lookup); //mask the first 14
   khint_t k;
   k = kh_get(64, h_array[hash_index], lookup); // query the hash table
   int is_missing, absent;
@@ -317,7 +329,7 @@ DBnode* DBG::access_node(std::string str, T put ){
 */
 int DBG::remove_node(uint64_t index){
   uint64_t lookup = canon(index, class_k);
-  uint64_t hash_index = hash_64(lookup) & 16383; //mask the first 14
+  uint64_t hash_index = hash_64_mask(lookup); //mask the first 14
   khint_t k;
   k = kh_get(64, h_array[hash_index], lookup); // query the hash table
   int is_missing;
@@ -602,7 +614,7 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     }
   }
   if (t_counter == 1){ //we found the extension
-    hash_index = hash_64(dec[ind]) & 16383;
+    hash_index = hash_64_mask(dec[ind]);
     k = kh_get(64, h_array[hash_index], dec[ind]); // query the hash table
     ext = kh_key(h_array[hash_index], k);
   }
@@ -674,7 +686,7 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     }
     if (counter == 1){ //we found the extension
       source = ext;
-      hash_index = hash_64(vec[new_ext_index]) & 16383;
+      hash_index = hash_64_mask(vec[new_ext_index]);
       k = kh_get(64, h_array[hash_index], vec[new_ext_index]); // query the hash table
       ext = kh_key(h_array[hash_index], k);
     }
@@ -697,7 +709,7 @@ int DBG::print_graph(){
         //std::cout << uint64_to_kmer(key, class_k) << "\n";
         std::vector<uint64_t> vec = get_extensions(key, class_k);
         for (const auto & n: vec){
-          hash_index = hash_64(n) & 16383;
+          hash_index = hash_64_mask(n);
           k2 = kh_get(64, h_array[hash_index], n); // query the hash table
           if ( k2 != kh_end(h_array[hash_index])){  // test if it is missing
             key2 = kh_key(h_array[hash_index], k2);
