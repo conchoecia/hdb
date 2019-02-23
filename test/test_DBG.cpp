@@ -1424,7 +1424,8 @@ TEST_CASE("tests the HKC generating function", "[test_hkc_gen]"){
   std::ifstream file(filename.c_str());
   std::string line;
   while(std::getline(file, line)){
-    REQUIRE(line == "AAAAATCCCCC");
+    //REQUIRE(line == "AAAAATCCCCC");
+    REQUIRE(line == "GGGGGATTTTT");
     std::cout << "line: " << line << std::endl;
   }
 }
@@ -1666,6 +1667,7 @@ TEST_CASE("some tests for the get_extensions function", "[get_extensions_str_tes
   uint32_t k = 9;
   REQUIRE( get_extensions(kmer, k+1).size() == 0);
   REQUIRE_THROWS_AS( get_extensions(kmer, k), std::runtime_error);
+  std::cout << "    ^  Yes there is supposed to be a N here\n";
 }
 
 TEST_CASE("test for N in kmer", "[N_kmer_to_uint64]"){

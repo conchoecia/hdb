@@ -55,18 +55,6 @@ static inline uint64_t hash_64(uint64_t key)
   return key;
 }
 
-static inline uint64_t hash_64_mask(uint64_t key)
-{ // more sophisticated hash function to reduce collisions
-  key = (~key + (key << 21)); // key = (key << 21) - key - 1;
-  key = key ^ key >> 24;
-  key = ((key + (key << 3)) + (key << 8)); // key * 265
-  key = key ^ key >> 14;
-  key = ((key + (key << 2)) + (key << 4)); // key * 21
-  key = key ^ key >> 28;
-  key = (key + (key << 31)) & 16383;
-  return key;
-}
-
 void print_uint64_t(uint64_t s){
   for (uint32_t j = 63; (j >= 0) && (j < 64); j--){
     std::cout << !!(s & (1UL<<j));
@@ -242,7 +230,7 @@ class DBG {
     uint32_t class_k;                // member variable
     uint32_t class_print;
     //khash_t(64) *class_h; //initialise the hash table of kmers to index
-    khash_t(64) * h_array[16384];
+    khash_t(64) * h_array[2];
 };
 
 /* constructor of HKCgraph,
@@ -252,7 +240,7 @@ DBG::DBG(T init_k, uint32_t print) {
   std::cout.precision(3);
   class_print = print;
   class_k = static_cast<uint32_t>(init_k);
-  for (uint32_t i =0; i < 16384; i++){
+  for (uint32_t i =0; i < 2; i++){
     h_array[i] = kh_init(64);
   }
   //class_h = kh_init(64);
@@ -260,7 +248,7 @@ DBG::DBG(T init_k, uint32_t print) {
 
 /* destructor. just tear down the hash table */
 DBG::~DBG() {
-  for (uint32_t i =0; i < 16384; i++){
+  for (uint32_t i =0; i < 2; i++){
     kh_destroy(64, h_array[i]);              // deallocate the hash table
   }
   //kh_destroy(64, class_h);              // deallocate the hash table
@@ -275,7 +263,7 @@ uint32_t DBG::get_k(){
    */
 uint64_t DBG::size(){
   uint64_t sum = 0;
-  for (uint32_t i =0; i < 16384; i++){
+  for (uint32_t i =0; i < 2; i++){
     sum += static_cast<uint64_t>(kh_size(h_array[i]));
   }
   return sum;
@@ -292,26 +280,27 @@ uint64_t DBG::size(){
 template<class T>
 DBnode* DBG::access_node(uint64_t index, T put ){
   uint64_t lookup = canon(index, class_k);
-  uint64_t hash_index = hash_64_mask(lookup); //mask the first 14
+  uint64_t hash_index = lookup & 1; //mask the first 14
+  khash_t(64) * this_hash = h_array[hash_index];
   khint_t k;
-  k = kh_get(64, h_array[hash_index], lookup); // query the hash table
+  k = kh_get(64, this_hash, lookup); // query the hash table
   int is_missing, absent;
-  is_missing = (int)(k == kh_end(h_array[hash_index]));
+  is_missing = (int)(k == kh_end(this_hash));
   if (put == 1){ //insert
     if (is_missing){
-      k = kh_put(64, h_array[hash_index], lookup, &absent);
-      kh_val(h_array[hash_index], k).count = 1;
-      kh_val(h_array[hash_index], k).flag = 0;
+      k = kh_put(64, this_hash, lookup, &absent);
+      kh_val(this_hash, k).count = 1;
+      kh_val(this_hash, k).flag = 0;
       //when we insert we also need to add edges
     } else {
-      kh_val(h_array[hash_index], k).count += 1;
+      kh_val(this_hash, k).count += 1;
       //don't mess with the flag here. we already instantiated it
     }
   }
   else{
     if (is_missing) return nullptr;
   }
-  return &( kh_val(h_array[hash_index], k) );
+  return &( kh_val(this_hash, k) );
 }
 
 template<class T>
@@ -329,15 +318,16 @@ DBnode* DBG::access_node(std::string str, T put ){
 */
 int DBG::remove_node(uint64_t index){
   uint64_t lookup = canon(index, class_k);
-  uint64_t hash_index = hash_64_mask(lookup); //mask the first 14
+  uint64_t hash_index = lookup & 1; //mask the first 14
+  khash_t(64) * this_hash = h_array[hash_index];
   khint_t k;
-  k = kh_get(64, h_array[hash_index], lookup); // query the hash table
+  k = kh_get(64, this_hash, lookup); // query the hash table
   int is_missing;
-  is_missing = (int)(k == kh_end(h_array[hash_index]));
+  is_missing = (int)(k == kh_end(this_hash));
   if (is_missing){
     return 0;
   } else {
-    kh_del(64, h_array[hash_index], k);// remove a key-value pair
+    kh_del(64, this_hash, k);// remove a key-value pair
     return 1;
   }
   return 0;
@@ -350,10 +340,12 @@ int DBG::count_nulls(){
   uint64_t key;
   DBnode * pNode;
   int counter = 0;
-  for (uint32_t i = 0; i < 16384; i++){
-    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
-      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
-        key = kh_key(h_array[i], k);
+  khash_t(64) * this_hash;
+  for (uint32_t i = 0; i < 2; i++){
+    this_hash = h_array[i];
+    for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
+      if (kh_exist(this_hash, k)){            // test if a bucket contains data
+        key = kh_key(this_hash, k);
         pNode = access_node(key, 0);
         if (pNode == NULL){
           counter++;
@@ -370,11 +362,13 @@ int DBG::delete_if_below_val(T min){
   khint_t k;
   uint64_t class_size = size();
   uint64_t counter = 0;
-  for (uint32_t i = 0; i < 16384; i++){
-    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
-      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
-        if (kh_val(h_array[i], k).count < min){
-          kh_del(64, h_array[i], k);// remove a key-value pair
+  khash_t(64) * this_hash;
+  for (uint32_t i = 0; i < 2; i++){
+    this_hash = h_array[i];
+    for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
+      if (kh_exist(this_hash, k)){            // test if a bucket contains data
+        if (kh_val(this_hash, k).count < min){
+          kh_del(64, this_hash, k);// remove a key-value pair
         }
         counter++;
         if (class_print == 1){
@@ -397,11 +391,13 @@ int DBG::delete_if_above_val(T max){
   khint_t k;
   uint64_t class_size = size();
   uint64_t counter = 0;
-  for (uint32_t i = 0; i < 16384; i++){
-    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
-      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
-        if (kh_val(h_array[i], k).count > max){
-          kh_del(64, h_array[i], k);// remove a key-value pair
+  khash_t(64) * this_hash;
+  for (uint32_t i = 0; i < 2; i++){
+    this_hash = h_array[i];
+    for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
+      if (kh_exist(this_hash, k)){            // test if a bucket contains data
+        if (kh_val(this_hash, k).count > max){
+          kh_del(64, this_hash, k);// remove a key-value pair
         }
         counter++;
         if (class_print == 1){
@@ -423,11 +419,13 @@ int DBG::delete_flagged(){
   khint_t k;
   uint64_t class_size = size();
   uint64_t counter = 0;
-  for (uint32_t i = 0; i < 16384; i++){
-    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
-      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
-        if (kh_val(h_array[i], k).is_flag_on(3) == 1){
-          kh_del(64, h_array[i], k);// remove a key-value pair
+  khash_t(64) * this_hash;
+  for (uint32_t i = 0; i < 2; i++){
+    this_hash = h_array[i];
+    for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
+      if (kh_exist(this_hash, k)){            // test if a bucket contains data
+        if (kh_val(this_hash, k).is_flag_on(3) == 1){
+          kh_del(64, this_hash, k);// remove a key-value pair
         }
         counter++;
         if (class_print == 1){
@@ -456,10 +454,12 @@ int DBG::mark_branching(){
   uint64_t op_counter = 0;
   uint16_t fiveprime_counter = 0;
   uint16_t threeprime_counter = 0;
-  for (uint32_t i = 0; i < 16384; i++){
-    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
-      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
-        key = kh_key(h_array[i], k);
+  khash_t(64) * this_hash;
+  for (uint32_t i = 0; i < 2; i++){
+    this_hash = h_array[i];
+    for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
+      if (kh_exist(this_hash, k)){            // test if a bucket contains data
+        key = kh_key(this_hash, k);
         pNode = access_node(key, 0);
         std::vector<uint64_t> vec = get_extensions(key, class_k);
         //optimizes the loop a bit
@@ -503,10 +503,12 @@ int DBG::mark_all_as_unvisited(){
   uint64_t class_size = size();
   uint64_t counter = 0;
   DBnode * pNode;
-  for (uint32_t i = 0; i < 16384; i++){
-    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
-      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
-        key = kh_key(h_array[i], k);
+  khash_t(64) * this_hash;
+  for (uint32_t i = 0; i < 2; i++){
+    this_hash = h_array[i];
+    for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
+      if (kh_exist(this_hash, k)){            // test if a bucket contains data
+        key = kh_key(this_hash, k);
         pNode = access_node(key, 0);
         pNode->bit_off(2);
         counter++;
@@ -535,10 +537,12 @@ int DBG::mark_non_het_for_deletion(){
   uint16_t fptp = 0;
   uint64_t class_size = size();
   uint64_t counter = 0;
-  for (uint32_t i = 0; i < 16384; i++){
-    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
-      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
-        key = kh_key(h_array[i], k);
+  khash_t(64) * this_hash;
+  for (uint32_t i = 0; i < 2; i++){
+    this_hash = h_array[i];
+    for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
+      if (kh_exist(this_hash, k)){            // test if a bucket contains data
+        key = kh_key(this_hash, k);
         pNode = access_node(key, 0);
         if ( pNode->is_flag_on(2) == 0){ //if not yet visited
           fptp = pNode->flag & mask;
@@ -581,6 +585,7 @@ int DBG::_mark_nhfd_helper(uint64_t source,
   khint_t k;
   uint64_t ext;
   uint64_t hash_index;
+  khash_t(64) * this_hash;
   DBnode * pNode;
   DBnode * pNodeT; //just a temp
   pNode = access_node(source, 0);
@@ -614,9 +619,10 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     }
   }
   if (t_counter == 1){ //we found the extension
-    hash_index = hash_64_mask(dec[ind]);
-    k = kh_get(64, h_array[hash_index], dec[ind]); // query the hash table
-    ext = kh_key(h_array[hash_index], k);
+    hash_index = dec[ind] & 1;
+    this_hash = h_array[hash_index];
+    k = kh_get(64, this_hash, dec[ind]); // query the hash table
+    ext = kh_key(this_hash, k);
   }
   else{ //there are multiple options or none - we should just delete this
     return 0;
@@ -686,9 +692,10 @@ int DBG::_mark_nhfd_helper(uint64_t source,
     }
     if (counter == 1){ //we found the extension
       source = ext;
-      hash_index = hash_64_mask(vec[new_ext_index]);
-      k = kh_get(64, h_array[hash_index], vec[new_ext_index]); // query the hash table
-      ext = kh_key(h_array[hash_index], k);
+      hash_index = vec[new_ext_index] & 1;
+      this_hash = h_array[hash_index];
+      k = kh_get(64, this_hash, vec[new_ext_index]); // query the hash table
+      ext = kh_key(this_hash, k);
     }
     else{ //we found the termination of the homozygous region
       done = 1;
@@ -702,14 +709,16 @@ int DBG::_mark_nhfd_helper(uint64_t source,
 int DBG::print_graph(){
   khint_t k, k2;
   uint64_t key, key2, hash_index;
-  for (uint32_t i = 0; i < 16384; i++){
-    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
-      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
-        key = kh_key(h_array[i], k);
+  khash_t(64) * this_hash;
+  for (uint32_t i = 0; i < 2; i++){
+    this_hash = h_array[i];
+    for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
+      if (kh_exist(this_hash, k)){            // test if a bucket contains data
+        key = kh_key(this_hash, k);
         //std::cout << uint64_to_kmer(key, class_k) << "\n";
         std::vector<uint64_t> vec = get_extensions(key, class_k);
         for (const auto & n: vec){
-          hash_index = hash_64_mask(n);
+          hash_index = n & 1;
           k2 = kh_get(64, h_array[hash_index], n); // query the hash table
           if ( k2 != kh_end(h_array[hash_index])){  // test if it is missing
             key2 = kh_key(h_array[hash_index], k2);
@@ -733,10 +742,12 @@ int DBG::gen_HKCs(std::string ofilename){
   myfile.open (ofilename);
 
   DBnode * pNode;
-  for (uint32_t i = 0; i < 16384; i++){
-    for (k = kh_begin(h_array[i]); k != kh_end(h_array[i]); ++k){  // traverse
-      if (kh_exist(h_array[i], k)){            // test if a bucket contains data
-        key = kh_key(h_array[i], k);
+  khash_t(64) * this_hash;
+  for (uint32_t i = 0; i < 2; i++){
+    this_hash = h_array[i];
+    for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
+      if (kh_exist(this_hash, k)){            // test if a bucket contains data
+        key = kh_key(this_hash, k);
         pNode = access_node(key, 0);
         if ( pNode->is_flag_on(2) == 0){
           pNode->bit_on(2);
@@ -854,7 +865,7 @@ std::string DBG::_gen_HKC_helper(uint64_t origin, uint32_t char_cat,
      */
     uint32_t decision = (same_orientation << 2) + (extend << 1) + char_cat;
     std::string new_base;
-    uint32_t run_dir = 2; //should never be 2. This 
+    uint32_t run_dir = 2; //should never be 2. This
     //std::cout << "  - case : " << decision << "\n";
     switch (decision){
       case (0):
