@@ -183,14 +183,12 @@ std::vector<uint64_t> get_extensions(std::string kmer, T inp_k){
 
 /* just get the rc of the seq */
 template<class T>
-uint64_t get_rc(uint64_t  kmer, T k){
-  uint64_t rc = 0;
-  uint64_t mask = 3;
-  for (uint64_t i = 0; i < k*2; i+=2){
-    rc = (rc << 2) | (3 - (kmer & mask));
-    kmer >>= 2;
-  }
-  return rc;
+uint64_t get_rc(uint64_t v, T k){
+  v = ((v >> 2)  & 0x3333333333333333) | ((v & 0x3333333333333333) << 2);
+  v = ((v >> 4)  & 0x0F0F0F0F0F0F0F0F) | ((v & 0x0F0F0F0F0F0F0F0F) << 4);
+  v = ((v >> 8)  & 0x00FF00FF00FF00FF) | ((v & 0x00FF00FF00FF00FF) << 8);
+  v = ((v >> 16) & 0x0000FFFF0000FFFF) | ((v & 0x0000FFFF0000FFFF) << 16);
+  return (~((v >> 32) | (v << 32))) >> (64-(2*k));
 }
 
 template<class T>
