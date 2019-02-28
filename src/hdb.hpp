@@ -222,6 +222,8 @@ class DBG {
     std::string _gen_HKC_helper(uint64_t origin, uint32_t char_cat, uint32_t extend);
     int mark_non_het_for_deletion();
     int _mark_nhfd_helper(uint64_t source, uint32_t dir);
+    int mark_branchlets_for_deletion();
+    int _mark_branchlet_helper(uint64_t source, uint32_t dir);
     // just does stuff
     int print_graph();
   private:                // begin private section
@@ -702,6 +704,123 @@ int DBG::_mark_nhfd_helper(uint64_t source,
   }
   return 0;
 }
+
+/* This goes through the graph and marks the potentially homozygous regions
+   for deletion.
+  */
+int DBG::mark_branchlets_for_deletion(){
+  khint_t k;
+  uint64_t key;
+  DBnode * pNode;
+  uint16_t mask = 3;
+  uint16_t fptp = 0;
+  uint64_t class_size = size();
+  uint64_t counter = 0;
+  khash_t(64) * this_hash;
+  for (uint32_t i = 0; i < 2; i++){
+    this_hash = h_array[i];
+    for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
+      if (kh_exist(this_hash, k)){            // test if a bucket contains data
+        key = kh_key(this_hash, k);
+        pNode = access_node(key, 0);
+        if ( pNode->is_flag_on(2) == 0){ //if not yet visited
+          fptp = pNode->flag & mask;
+          switch (fptp){
+            case 1: //just fp branch
+              //search in the rp direction
+              //std::cout << "search in the rp dir\n";
+              _mark_branchlet_helper(key, 0);
+              break;
+            case 2: //just rp branch
+              //search in the fp direction
+              //std::cout << "search in the fp dir\n";
+              _mark_branchlet_helper(key, 1);
+              break;
+          }
+        }
+        counter++;
+        if (class_print == 1){
+          if ( counter % 20000 == 0){
+            std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          }
+        }
+      }
+    }
+  }
+  if (class_print == 1){
+    std::cout << "\r" << "   - 100% (" << counter << " of " << class_size << " )  " << std::endl;
+  }
+  return 0;
+}
+
+/* marks all of the branchlets for deletions
+  */
+int DBG::_mark_branchlet_helper(uint64_t source,
+                           uint32_t dir){
+  DBnode * pNode;
+  DBnode * pNodeT; //just a temp
+  pNode = access_node(source, 0);
+
+  // THE POINT OF THIS WHOLE BLOCK IS TO FIND EXT
+  //if direction == 0 it branches in the 5p direction
+  // dir == 0 it branches in the 3p direction
+  uint32_t start, stop;
+  std::vector<uint64_t> dec = get_extensions(source, class_k);
+  if (dir == 0){//0 means search in 5p direction
+    start = 0;
+    stop = 4;
+  }
+  else if ( dir == 1) {//1 means search in 3p direction
+    start = 4;
+    stop = 8;
+  }
+  else {
+    throw std::runtime_error("Dir passed to DBG::_mark_branchlet_helper must be 0 or 1.\n");
+  }
+
+  int match = -1;
+  std::cout << "Looking at source " << source << "\n";
+  for (uint32_t i = start; i < stop; i++){
+    pNodeT = access_node(dec[i], 0);
+    std::cout << "  - just accessed this source\n";
+    //look at all the branches and make sure they aren't branchlets
+    if (pNodeT != nullptr){
+      std::cout << "    - in the if for " << dec[i] << "\n";
+      std::vector<uint64_t> vec = get_extensions(dec[i], class_k);
+      for (uint32_t j = 0; j < 8; j++ ){
+        std::cout << "      - in the for\n";
+        if (vec[j] == source){
+          std::cout << "     - source " << " matches " << vec[j] << " at " << j << "\n";
+          match = j;
+        }
+      }
+      if (match < 4){
+        start = 4;
+        stop = 8;
+      }
+      else if ((match >= 4) && (match <8)){
+        start = 0;
+        stop = 4;
+      }
+      else {
+        throw std::runtime_error("Didn't find a match in _mark_branchlet_helper.\n");
+      }
+      //If there are no extensions then this is a branchlet
+      uint32_t branchlet_counter = 0;
+      std::cout << "      - before the next for\n";
+      for ( uint32_t k = start; k < stop; k++ ){
+        pNode = access_node(vec[k], 0);
+        if (pNode != nullptr) branchlet_counter++;
+      }
+      std::cout << "      - branchlet_counter is " << branchlet_counter << "\n";
+      if (branchlet_counter == 0){
+        pNodeT->bit_on(3);
+      }
+    }
+  }
+  return 0;
+}
+
 
 /* print out the graph */
 int DBG::print_graph(){

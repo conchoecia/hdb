@@ -1860,3 +1860,142 @@ TEST_CASE("tests delete if below and delete if above", "[delete_below_and_above]
   pNode = G.access_node(str, 0);
   REQUIRE(pNode == nullptr);
 }
+
+TEST_CASE( "tests if the mark_branchlets works", \
+           "[test_branchlets]"){
+  /*make sure all the kmers are in the graph
+
+      This De Bruijn Graph is shaped like this
+       \
+        \_______
+        /
+       /
+    GACAC
+    TACAC
+     ACACC
+  */
+  DBG G = DBG(5);
+  std::string str = "GACAC";
+  DBnode * pNode = G.access_node(str, 1);
+
+  str = "TACAC";
+  pNode = G.access_node(str, 1);
+
+  str =  "ACACC";
+  pNode = G.access_node(str, 1);
+
+  G.mark_branching();
+  G.mark_branchlets_for_deletion();
+
+  str = "GACAC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+  REQUIRE(pNode->is_flag_on(3) == 1);
+
+  str = "TACAC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 0);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+  REQUIRE(pNode->is_flag_on(3) == 1);
+
+  str =  "ACACC";
+  pNode = G.access_node(str, 0);
+  REQUIRE(pNode != nullptr);
+  REQUIRE(pNode->is_flag_on(0) == 1);
+  REQUIRE(pNode->is_flag_on(1) == 0);
+  REQUIRE(pNode->is_flag_on(3) == 0);
+}
+
+//TEST_CASE( "tests if the mark_branchlets works", \
+//           "[test_branchlets]"){
+//  /*make sure all the kmers are in the graph
+//
+//      This De Bruijn Graph is shaped like this
+//       \          /      /
+//        \________/______/
+//        /               \
+//       /                 \
+//    GACAC
+//    TACAC
+//     ACACC
+//      CACCC
+//      CACCG
+//       ACCGA
+//       ACCGT
+//  */
+//  DBG G = DBG(5);
+//  std::string str = "GACAC";
+//  DBnode * pNode = G.access_node(str, 1);
+//
+//  str = "TACAC";
+//  pNode = G.access_node(str, 1);
+//
+//  str =  "ACACC";
+//  pNode = G.access_node(str, 1);
+//
+//  str =   "CACCC";
+//  pNode = G.access_node(str, 1);
+//
+//  str =   "CACCG";
+//  pNode = G.access_node(str, 1);
+//
+//  str =   "ACCGA";
+//  pNode = G.access_node(str, 1);
+//
+//  str =   "ACCGT";
+//  pNode = G.access_node(str, 1);
+//
+//  G.mark_branching();
+//  G.mark_branchlets_for_deletion();
+//
+//
+//  str = "GACAC";
+//  pNode = G.access_node(str, 0);
+//  REQUIRE(pNode != nullptr);
+//  REQUIRE(pNode->is_flag_on(0) == 0);
+//  REQUIRE(pNode->is_flag_on(1) == 0);
+//  REQUIRE(pNode->is_flag_on(3) == 1);
+//
+//  str = "TACAC";
+//  pNode = G.access_node(str, 0);
+//  REQUIRE(pNode != nullptr);
+//  REQUIRE(pNode->is_flag_on(0) == 0);
+//  REQUIRE(pNode->is_flag_on(1) == 0);
+//  REQUIRE(pNode->is_flag_on(3) == 1);
+//
+//  str =  "ACACC";
+//  pNode = G.access_node(str, 0);
+//  REQUIRE(pNode != nullptr);
+//  REQUIRE(pNode->is_flag_on(0) == 1);
+//  REQUIRE(pNode->is_flag_on(1) == 1);
+//
+//  str =   "CACCC";
+//  pNode = G.access_node(str, 0);
+//  REQUIRE(pNode != nullptr);
+//  REQUIRE(pNode->is_flag_on(0) == 0);
+//  REQUIRE(pNode->is_flag_on(1) == 0);
+//  REQUIRE(pNode->is_flag_on(3) == 1);
+//
+//  str =   "CACCG";
+//  pNode = G.access_node(str, 0);
+//  REQUIRE(pNode != nullptr);
+//  REQUIRE(pNode->is_flag_on(0) == 0);
+//  REQUIRE(pNode->is_flag_on(1) == 1);
+//
+//  str =   "ACCGA";
+//  pNode = G.access_node(str, 0);
+//  REQUIRE(pNode != nullptr);
+//  REQUIRE(pNode->is_flag_on(0) == 0);
+//  REQUIRE(pNode->is_flag_on(1) == 0);
+//  REQUIRE(pNode->is_flag_on(3) == 1);
+//
+//  str =   "ACCGT";
+//  pNode = G.access_node(str, 0);
+//  REQUIRE(pNode != nullptr);
+//  REQUIRE(pNode->is_flag_on(0) == 0);
+//  REQUIRE(pNode->is_flag_on(1) == 0);
+//  REQUIRE(pNode->is_flag_on(3) == 1);
+//}
