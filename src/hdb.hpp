@@ -712,8 +712,6 @@ int DBG::mark_branchlets_for_deletion(){
   khint_t k;
   uint64_t key;
   DBnode * pNode;
-  uint16_t mask = 3;
-  uint16_t fptp = 0;
   uint64_t class_size = size();
   uint64_t counter = 0;
   khash_t(64) * this_hash;
@@ -724,18 +722,13 @@ int DBG::mark_branchlets_for_deletion(){
         key = kh_key(this_hash, k);
         pNode = access_node(key, 0);
         if ( pNode->is_flag_on(2) == 0){ //if not yet visited
-          fptp = pNode->flag & mask;
-          switch (fptp){
-            case 1: //just fp branch
-              //search in the rp direction
-              //std::cout << "search in the rp dir\n";
-              _mark_branchlet_helper(key, 0);
-              break;
-            case 2: //just rp branch
-              //search in the fp direction
-              //std::cout << "search in the fp dir\n";
-              _mark_branchlet_helper(key, 1);
-              break;
+          if (pNode->is_flag_on(0) ){ //fp branches
+            //std::cout << "search in the rp dir\n";
+            _mark_branchlet_helper(key, 0);
+          }
+          if (pNode->is_flag_on(1) ){ //rp branches
+            //std::cout << "search in the fp dir\n";
+            _mark_branchlet_helper(key, 1);
           }
         }
         counter++;
