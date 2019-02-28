@@ -8,18 +8,25 @@
 int main(int argc, char **argv) {
   Vars vars = process_cl_args(argc, argv);
   DBG G = DBG(vars.k, 1);
+  uint64_t del_count;
   std::cout << " - Reading kmers from stdin." << std::endl;
   parse_kmer_dump(G, std::cin, vars.k, vars.min_count, 1 );
   std::cout << " - Removing all kmers with counts below: " << vars.min_count << std::endl;
   G.delete_if_below_val(vars.min_count);
-  std::cout << " - Removing all kmers with counts above: " << 255 << std::endl;
-  G.delete_if_above_val(255);
+  std::cout << " - Removing all kmers with counts above: " << vars.max_count << std::endl;
+  G.delete_if_above_val(vars.max_count);
   std::cout << " - Marking all branching kmers." << std::endl;
   G.mark_branching();
+  std::cout << " - Marking all branchlets for deletion." << std::endl;
+  G.mark_branchlets_for_deletion();
+  std::cout << " - Deleting branchlets." << std::endl;
+  del_count = G.delete_flagged();
+  std::cout << "   - Deleted " << del_count << "branchlet kmers." << std::endl;
   std::cout << " - Marking all potential non-heterozygous regions for deletion." << std::endl;
   G.mark_non_het_for_deletion();
   std::cout << " - Deleting potentially non-heterozygous regions.." << std::endl;
-  G.delete_flagged();
+  del_count = G.delete_flagged();
+  std::cout << "   - Deleted " << del_count << "potentially homozygous kmers." << std::endl;
   std::cout << " - Removing all kmers with counts above: " << vars.max_count << std::endl;
   G.delete_if_above_val(vars.max_count);
   std::cout << " - Marking all kmers as unvisited." << std::endl;
@@ -42,19 +49,22 @@ Vars process_cl_args(int argc, char **argv){
   }
   //printf("argv: %s\n", argv);
   //printf("argc: %s\n", argc);
-  while( (c=getopt( argc, argv, "k:m:M:o:" )) != -1 ) {
+  while( (c=getopt( argc, argv, "k:m:M:o:H:" )) != -1 ) {
     switch(c) {
-    case 'o' :
-      vars.out_prefix = optarg;
-      break;
-    case 'm' :
-      vars.min_count = static_cast<uint32_t>(atoi(optarg));
-      break;
-    case 'M' :
-      vars.max_count = static_cast<uint32_t>(atoi(optarg));
+    case 'H' :
+      vars.delete_hairs = static_cast<uint32_t>(atoi(optarg));
       break;
     case 'k' :
       vars.k = static_cast<uint32_t>(atoi(optarg));
+      break;
+    case 'm' : //minimum count
+      vars.min_count = static_cast<uint32_t>(atoi(optarg));
+      break;
+    case 'M':
+      vars.max_count = static_cast<uint32_t>(atoi(optarg));
+      break;
+    case 'o':
+      vars.out_prefix = optarg;
       break;
     case 'h' :
       help();

@@ -216,7 +216,7 @@ class DBG {
     int mark_all_as_unvisited();
     template<typename T> int delete_if_below_val(T min);
     template<typename T> int delete_if_above_val(T max);
-    int delete_flagged();
+    uint64_t delete_flagged();
     int count_nulls();
     int gen_HKCs(std::string filename);
     std::string _gen_HKC_helper(uint64_t origin, uint32_t char_cat, uint32_t extend);
@@ -414,11 +414,13 @@ int DBG::delete_if_above_val(T max){
   return 0;
 }
 
-/* Delete all of the kmers that are flagged for deletion   */
-int DBG::delete_flagged(){
+/* Delete all of the kmers that are flagged for deletion.
+   Returns the number of kmers that were deleted*/
+uint64_t DBG::delete_flagged(){
   khint_t k;
   uint64_t class_size = size();
   uint64_t counter = 0;
+  uint64_t del_counter = 0;
   khash_t(64) * this_hash;
   for (uint32_t i = 0; i < 2; i++){
     this_hash = h_array[i];
@@ -426,6 +428,7 @@ int DBG::delete_flagged(){
       if (kh_exist(this_hash, k)){            // test if a bucket contains data
         if (kh_val(this_hash, k).is_flag_on(3) == 1){
           kh_del(64, this_hash, k);// remove a key-value pair
+          del_counter ++;
         }
         counter++;
         if (class_print == 1){
@@ -439,7 +442,7 @@ int DBG::delete_flagged(){
   if (class_print == 1){
     std::cout << "\r" << "   - 100% (" << counter << " of " << class_size << " )  " << std::endl;
   }
-  return 0;
+  return del_counter;
 }
 
 /* Mark all of the branching nodes
