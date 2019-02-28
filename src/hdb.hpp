@@ -775,18 +775,18 @@ int DBG::_mark_branchlet_helper(uint64_t source,
   }
 
   int match = -1;
-  std::cout << "Looking at source " << source << "\n";
+  //std::cout << "Looking at source " << source << "\n";
   for (uint32_t i = start; i < stop; i++){
     pNodeT = access_node(dec[i], 0);
-    std::cout << "  - just accessed this source\n";
+    //std::cout << "  - just accessed this source\n";
     //look at all the branches and make sure they aren't branchlets
     if (pNodeT != nullptr){
-      std::cout << "    - in the if for " << dec[i] << "\n";
+      //std::cout << "    - in the if for " << dec[i] << "\n";
       std::vector<uint64_t> vec = get_extensions(dec[i], class_k);
       for (uint32_t j = 0; j < 8; j++ ){
-        std::cout << "      - in the for\n";
+        //std::cout << "      - in the for\n";
         if (vec[j] == source){
-          std::cout << "     - source " << " matches " << vec[j] << " at " << j << "\n";
+          //std::cout << "     - source " << " matches " << vec[j] << " at " << j << "\n";
           match = j;
         }
       }
@@ -803,12 +803,12 @@ int DBG::_mark_branchlet_helper(uint64_t source,
       }
       //If there are no extensions then this is a branchlet
       uint32_t branchlet_counter = 0;
-      std::cout << "      - before the next for\n";
+      //std::cout << "      - before the next for\n";
       for ( uint32_t k = start; k < stop; k++ ){
         pNode = access_node(vec[k], 0);
         if (pNode != nullptr) branchlet_counter++;
       }
-      std::cout << "      - branchlet_counter is " << branchlet_counter << "\n";
+      //std::cout << "      - branchlet_counter is " << branchlet_counter << "\n";
       if (branchlet_counter == 0){
         pNodeT->bit_on(3);
       }
