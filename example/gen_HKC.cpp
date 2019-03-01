@@ -16,16 +16,16 @@ int main(int argc, char **argv) {
   std::cout << "   - Deleted " << del_count << " kmers." << std::endl;
   std::cout << " - Removing all kmers with counts above: " << vars.ceiling << std::endl;
   del_count = G.delete_if_above_val(vars.ceiling);
-  std::cout << " - Marking all branching kmers." << std::endl;
   std::cout << "   - Deleted " << del_count << " kmers." << std::endl;
+  std::cout << " - Marking all branching kmers." << std::endl;
   G.mark_branching();
   if (vars.delete_hairs){
     std::cout << " - Marking all branchlets for deletion." << std::endl;
     G.mark_branchlets_for_deletion();
     std::cout << " - Deleting branchlets." << std::endl;
     del_count = G.delete_flagged();
+    std::cout << "   - Deleted " << del_count << " branchlet kmers." << std::endl;
   }
-  std::cout << "   - Deleted " << del_count << " branchlet kmers." << std::endl;
   std::cout << " - Marking all potential non-heterozygous regions for deletion." << std::endl;
   G.mark_non_het_for_deletion();
   std::cout << " - Deleting potentially non-heterozygous regions.." << std::endl;
