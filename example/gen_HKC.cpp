@@ -13,8 +13,8 @@ int main(int argc, char **argv) {
   parse_kmer_dump(G, std::cin, vars.k, vars.min_count, 1 );
   std::cout << " - Removing all kmers with counts below: " << vars.min_count << std::endl;
   G.delete_if_below_val(vars.min_count);
-  std::cout << " - Removing all kmers with counts above: " << vars.max_count << std::endl;
-  G.delete_if_above_val(vars.max_count);
+  std::cout << " - Removing all kmers with counts above: " << vars.ceiling << std::endl;
+  G.delete_if_above_val(vars.ceiling);
   std::cout << " - Marking all branching kmers." << std::endl;
   G.mark_branching();
   std::cout << " - Marking all branchlets for deletion." << std::endl;
@@ -49,8 +49,11 @@ Vars process_cl_args(int argc, char **argv){
   }
   //printf("argv: %s\n", argv);
   //printf("argc: %s\n", argc);
-  while( (c=getopt( argc, argv, "k:m:M:o:H:" )) != -1 ) {
+  while( (c=getopt( argc, argv, "k:m:M:o:H:C:" )) != -1 ) {
     switch(c) {
+    case 'C' :
+      vars.ceiling = static_cast<uint32_t>(atoi(optarg));
+      break;
     case 'H' :
       vars.delete_hairs = static_cast<uint32_t>(atoi(optarg));
       break;
@@ -82,6 +85,9 @@ Vars process_cl_args(int argc, char **argv){
     printf( "    %d is not an odd number.\n", vars.k);
     printf( "    Goodbye.\n");
     exit(1);
+  }
+  if (vars.ceiling <= vars.max_count){
+    std::cout << "-C must be larger than -M.\n";
   }
   return(vars);
 }
