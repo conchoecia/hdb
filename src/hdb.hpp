@@ -217,6 +217,7 @@ class DBG {
     template<typename T> uint64_t delete_if_below_val(T min);
     template<typename T> uint64_t delete_if_above_val(T max);
     uint64_t delete_flagged();
+    template<typename T> uint64_t delete_if_flag_on(T flag);
     int count_nulls();
     int gen_HKCs(std::string filename);
     std::string _gen_HKC_helper(uint64_t origin, uint32_t char_cat, uint32_t extend);
@@ -417,6 +418,11 @@ uint64_t DBG::delete_if_above_val(T max){
   }
   return del_counter;
 }
+
+uint64_t DBG::delete_flagged(){
+  return delete_if_flag_on(3);
+}
+
 
 /* Delete all of the kmers that are flagged for deletion.
    Returns the number of kmers that were deleted*/

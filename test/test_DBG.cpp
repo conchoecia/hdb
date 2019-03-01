@@ -1885,28 +1885,28 @@ TEST_CASE( "tests if the mark_branchlets works", \
   pNode = G.access_node(str, 1);
 
   G.mark_branching();
-  G.mark_branchlets_for_deletion();
+  G.mark_branchlets();
 
   str = "GACAC";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 1);
+  REQUIRE(pNode->is_flag_on(4) == 1);
 
   str = "TACAC";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 1);
+  REQUIRE(pNode->is_flag_on(4) == 1);
 
   str =  "ACACC";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 1);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 0);
+  REQUIRE(pNode->is_flag_on(4) == 0);
 }
 
 TEST_CASE( "tests if the mark_branchlets works for a butterfly-shaped graph", \
@@ -1941,42 +1941,42 @@ TEST_CASE( "tests if the mark_branchlets works for a butterfly-shaped graph", \
   pNode = G.access_node(str, 1);
 
   G.mark_branching();
-  G.mark_branchlets_for_deletion();
+  G.mark_branchlets();
 
   str = "GACAC";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 1);
+  REQUIRE(pNode->is_flag_on(4) == 1);
 
   str = "TACAC";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 1);
+  REQUIRE(pNode->is_flag_on(4) == 1);
 
   str =  "ACACC";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 1);
   REQUIRE(pNode->is_flag_on(1) == 1);
-  REQUIRE(pNode->is_flag_on(3) == 0);
+  REQUIRE(pNode->is_flag_on(4) == 0);
 
   str =   "CACCC";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 1);
+  REQUIRE(pNode->is_flag_on(4) == 1);
 
   str =   "CACCG";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 1);
+  REQUIRE(pNode->is_flag_on(4) == 1);
 }
 
 
@@ -2020,55 +2020,54 @@ TEST_CASE( "tests if the mark_branchlets works for a more complicated case", \
   pNode = G.access_node(str, 1);
 
   G.mark_branching();
-  G.mark_branchlets_for_deletion();
-
+  G.mark_branchlets();
 
   str = "GACAC";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 1);
+  REQUIRE(pNode->is_flag_on(4) == 1);
 
   str = "TACAC";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 1);
+  REQUIRE(pNode->is_flag_on(4) == 1);
 
   str =  "ACACC";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 1);
   REQUIRE(pNode->is_flag_on(1) == 1);
-  REQUIRE(pNode->is_flag_on(3) == 0);
+  REQUIRE(pNode->is_flag_on(4) == 0);
 
   str =   "CACCC";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 1);
+  REQUIRE(pNode->is_flag_on(4) == 1);
 
   str =   "CACCG";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 1);
-  REQUIRE(pNode->is_flag_on(3) == 0);
+  REQUIRE(pNode->is_flag_on(4) == 0);
 
   str =   "ACCGA";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 1);
+  REQUIRE(pNode->is_flag_on(4) == 1);
 
   str =   "ACCGT";
   pNode = G.access_node(str, 0);
   REQUIRE(pNode != nullptr);
   REQUIRE(pNode->is_flag_on(0) == 0);
   REQUIRE(pNode->is_flag_on(1) == 0);
-  REQUIRE(pNode->is_flag_on(3) == 1);
+  REQUIRE(pNode->is_flag_on(4) == 1);
 }
