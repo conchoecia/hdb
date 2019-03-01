@@ -19,8 +19,8 @@ uint64_t canon(const uint64_t & kmer, T k);
     0 - fiveprime_branching
     1 - threeprime_branching
     2 - visited
-    3 - delete this
-    4 -
+    3 - delete
+    4 - delete_after_hom_deletion
     5 -
     6 -
     7 -
@@ -222,7 +222,7 @@ class DBG {
     std::string _gen_HKC_helper(uint64_t origin, uint32_t char_cat, uint32_t extend);
     int mark_non_het_for_deletion();
     int _mark_nhfd_helper(uint64_t source, uint32_t dir);
-    int mark_branchlets_for_deletion();
+    int mark_branchlets();
     int _mark_branchlet_helper(uint64_t source, uint32_t dir);
     // just does stuff
     int print_graph();
@@ -387,7 +387,7 @@ uint64_t DBG::delete_if_below_val(T min){
   return del_counter;
 }
 
-/* Mark all kmers with counts below this value for deletion*/
+/* Delete kmer if the count is above a certain val.*/
 template<typename T>
 uint64_t DBG::delete_if_above_val(T max){
   khint_t k;
@@ -420,7 +420,8 @@ uint64_t DBG::delete_if_above_val(T max){
 
 /* Delete all of the kmers that are flagged for deletion.
    Returns the number of kmers that were deleted*/
-uint64_t DBG::delete_flagged(){
+template<typename T>
+uint64_t DBG::delete_if_flag_on(T flag){
   khint_t k;
   uint64_t class_size = size();
   uint64_t counter = 0;
@@ -430,7 +431,7 @@ uint64_t DBG::delete_flagged(){
     this_hash = h_array[i];
     for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
       if (kh_exist(this_hash, k)){            // test if a bucket contains data
-        if (kh_val(this_hash, k).is_flag_on(3) == 1){
+        if (kh_val(this_hash, k).is_flag_on(flag) == 1){
           kh_del(64, this_hash, k);// remove a key-value pair
           del_counter ++;
         }
@@ -715,7 +716,7 @@ int DBG::_mark_nhfd_helper(uint64_t source,
 /* This goes through the graph and marks the potentially homozygous regions
    for deletion.
   */
-int DBG::mark_branchlets_for_deletion(){
+int DBG::mark_branchlets(){
   khint_t k;
   uint64_t key;
   DBnode * pNode;
@@ -814,7 +815,7 @@ int DBG::_mark_branchlet_helper(uint64_t source,
       }
       //std::cout << "      - branchlet_counter is " << branchlet_counter << "\n";
       if (branchlet_counter == 0){
-        pNodeT->bit_on(3);
+        pNodeT->bit_on(4);
       }
     }
   }

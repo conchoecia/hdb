@@ -21,16 +21,18 @@ int main(int argc, char **argv) {
   G.mark_branching();
   if (vars.delete_hairs){
     std::cout << " - Marking all branchlets for deletion." << std::endl;
-    G.mark_branchlets_for_deletion();
-    std::cout << " - Deleting branchlets." << std::endl;
-    del_count = G.delete_flagged();
-    std::cout << "   - Deleted " << del_count << " branchlet kmers." << std::endl;
+    G.mark_branchlets();
   }
   std::cout << " - Marking all potential non-heterozygous regions for deletion." << std::endl;
   G.mark_non_het_for_deletion();
   std::cout << " - Deleting potentially non-heterozygous regions.." << std::endl;
-  del_count = G.delete_flagged();
+  del_count = G.delete_if_flag_on(3);
   std::cout << "   - Deleted " << del_count << " potentially homozygous kmers." << std::endl;
+  if (vars.delete_hairs){
+    std::cout << " - Deleting branchlets." << std::endl;
+    del_count = G.delete_if_flag_on(4);
+    std::cout << "   - Deleted " << del_count << " branchlet kmers." << std::endl;
+  }
   std::cout << " - Removing all kmers with counts above: " << vars.max_count << std::endl;
   G.delete_if_above_val(vars.max_count);
   std::cout << " - Marking all kmers as unvisited." << std::endl;
