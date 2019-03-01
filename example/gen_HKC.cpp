@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
   std::cout << " - Marking all branching kmers." << std::endl;
   G.mark_branching();
   if (vars.delete_hairs){
-    std::cout << " - Marking all branchlets for deletion." << std::endl;
+    std::cout << " - Marking all branchlets." << std::endl;
     G.mark_branchlets();
   }
   std::cout << " - Marking all potential non-heterozygous regions for deletion." << std::endl;
@@ -55,13 +55,13 @@ Vars process_cl_args(int argc, char **argv){
   }
   //printf("argv: %s\n", argv);
   //printf("argc: %s\n", argc);
-  while( (c=getopt( argc, argv, "k:m:M:o:H:C:" )) != -1 ) {
+  while( (c=getopt( argc, argv, "k:m:M:o:HC:" )) != -1 ) {
     switch(c) {
     case 'C' :
       vars.ceiling = static_cast<uint32_t>(atoi(optarg));
       break;
     case 'H' :
-      vars.delete_hairs = static_cast<uint32_t>(atoi(optarg));
+      vars.delete_hairs = 1;
       break;
     case 'k' :
       vars.k = static_cast<uint32_t>(atoi(optarg));
