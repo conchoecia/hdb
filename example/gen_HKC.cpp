@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
   }
   std::cout << " - Marking all potential non-heterozygous regions for deletion." << std::endl;
   G.mark_non_het_for_deletion();
-  std::cout << " - Deleting potentially non-heterozygous regions.." << std::endl;
+  std::cout << " - Deleting potentially non-heterozygous regions." << std::endl;
   del_count = G.delete_if_flag_on(3);
   std::cout << "   - Deleted " << del_count << " potentially homozygous kmers." << std::endl;
   if (vars.delete_hairs){
