@@ -30,7 +30,36 @@ int main(int argc, char **argv) {
 }
 
 void help(void){
-  std::cout << "help statement needs to be rewritten\n";
+  std::cout << "To select the -m and -M parameters, use the kmer spectrum\n";
+  std::cout << "  below as an example. The 'm' param is the lower cutoff of\n";
+  std::cout << "  the heterozygous peak. The 'M' param is the higher cutoff\n";
+  std::cout << "  of the heterozygous peak. Only kmers in this window are kept\n";
+  std::cout << "  in the final HKCs.\n";
+  std::cout << "\n";
+  std::cout << "          Kmer spectrum of highly heterozygous species    \n";
+  std::cout << "         -------------------------------------------------\n";
+  std::cout << "         | * < Error Peak                                |\n";
+  std::cout << "         | *                                             |\n";
+  std::cout << "         | *          **   <Heterozygous peak            |\n";
+  std::cout << "         | *         ****                                |\n";
+  std::cout << "   KMER  | **        ****                                |\n";
+  std::cout << "   COUNT | **       ******                               |\n";
+  std::cout << "         | ***      ******                               |\n";
+  std::cout << "         | ***     ********       ***  < Homozygous peak |\n";
+  std::cout << "         | ***     ********      *****                   |\n";
+  std::cout << "         | ****   **********    ********                 |\n";
+  std::cout << "         | ******************  ***********               |\n";
+  std::cout << "         | ********************************************* |\n";
+  std::cout << "         ------------------------------------------------|\n";
+  std::cout << "                ^           ^             KMER FREQ       \n";
+  std::cout << "               'm' param   'M' param                      \n";
+  std::cout << "\n";
+  std::cout << "Args:\n";
+  std::cout << "\n";
+  std::cout << "  -o  outprefix\n";
+  std::cout << "  -m  lower cutoff of het peak\n";
+  std::cout << "  -M  upper cutoff of het peak\n";
+  std::cout << "  -k  kmer size\n";
 }
 
 Vars process_cl_args(int argc, char **argv){
