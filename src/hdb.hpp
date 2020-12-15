@@ -217,6 +217,7 @@ class DBG {
     template<typename T> int delete_if_below_val(T min);
     template<typename T> int delete_if_above_val(T max);
     int delete_flagged();
+    int delete_branching();
     int count_nulls();
     int gen_HKCs(std::string filename);
     std::string _gen_HKC_helper(uint64_t origin, uint32_t char_cat, uint32_t extend);
@@ -423,6 +424,34 @@ int DBG::delete_flagged(){
     for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
       if (kh_exist(this_hash, k)){            // test if a bucket contains data
         if (kh_val(this_hash, k).is_flag_on(3) == 1){
+          kh_del(64, this_hash, k);// remove a key-value pair
+        }
+        counter++;
+        if (class_print == 1){
+          if ( counter % 20000 == 0){
+            std::cout << "\r" << "   - " << ((double)counter/(double)class_size)*100 << "% (" << counter << " of " << class_size << " )  " << std::flush;
+          }
+        }
+      }
+    }
+  }
+  if (class_print == 1){
+    std::cout << "\r" << "   - 100% (" << counter << " of " << class_size << " )  " << std::endl;
+  }
+  return 0;
+}
+
+/* Delete all of the kmers that are branching either 5p or 3p   */
+int DBG::delete_branching(){
+  khint_t k;
+  uint64_t class_size = size();
+  uint64_t counter = 0;
+  khash_t(64) * this_hash;
+  for (uint32_t i = 0; i < 2; i++){
+    this_hash = h_array[i];
+    for (k = kh_begin(this_hash); k != kh_end(this_hash); ++k){  // traverse
+      if (kh_exist(this_hash, k)){            // test if a bucket contains data
+        if ((kh_val(this_hash, k).is_flag_on(0) == 1) || (kh_val(this_hash, k).is_flag_on(1) == 1)) {
           kh_del(64, this_hash, k);// remove a key-value pair
         }
         counter++;
